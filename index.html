@@ -337,7 +337,7 @@
         // ==========================================
         
         // 【請在此處填入您的 Gemini API Key】
-        const GEMINI_API_KEY = ""; 
+        const GEMINI_API_KEY = "AQ.Ab8RN6KTg3bfx9DeuaZU1SHx1jB2yj1vB8bwSFJB7ZzfX3Nz8A"; 
 
         // 您專屬的 Firebase 設定檔
         const firebaseConfig = {
@@ -668,6 +668,11 @@
         }
 
         async function callGeminiAPI(prompt, systemInstruction) {
+            // 檢查是否已填寫 API Key 防護機制
+            if (!GEMINI_API_KEY || GEMINI_API_KEY.trim() === "") {
+                throw new Error("請先在程式碼的 GEMINI_API_KEY 變數中填寫您的專屬金鑰！目前為空字串，因此遭到 Google 伺服器拒絕。");
+            }
+
             // 使用穩定的 gemini-2.5-flash 模型
             const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
             
