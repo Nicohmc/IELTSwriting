@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>IELTS 寫作訓練平台 (雲端版)</title>
+    <title>IELTS 寫作訓練平台</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
         body {
@@ -26,14 +25,10 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .hidden-mode { display: none !important; }
     </style>
-    
-    <!-- 引入 Firebase Compat SDK (相容舊版寫法，方便單一檔案整合) -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </head>
 <body class="text-slate-800 h-screen flex flex-col overflow-hidden">
 
+    <!-- 頂部導航列 -->
     <header class="bg-white shadow-sm z-20 relative shrink-0">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-14 md:h-16 items-center">
@@ -41,32 +36,12 @@
                     <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
                     <span class="font-bold text-lg md:text-xl tracking-wider text-slate-800">IELTS Pro</span>
                 </div>
-                
-                <nav class="hidden md:flex space-x-4 lg:space-x-8 items-center">
+                <nav class="hidden md:flex space-x-8">
                     <button onclick="switchView('home')" class="nav-btn text-slate-500 hover:text-blue-600 font-medium px-3 py-2 rounded-md transition-colors" data-target="home">儀表板</button>
                     <button onclick="switchView('training')" class="nav-btn text-slate-500 hover:text-blue-600 font-medium px-3 py-2 rounded-md transition-colors" data-target="training">基礎訓練營</button>
                     <button onclick="switchView('exam')" class="nav-btn text-slate-500 hover:text-blue-600 font-medium px-3 py-2 rounded-md transition-colors" data-target="exam">實戰模擬考</button>
-                    <button onclick="switchView('notebook')" class="nav-btn text-slate-500 hover:text-blue-600 font-medium px-3 py-2 rounded-md transition-colors flex items-center" data-target="notebook">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
-                        錯題本
-                    </button>
-                    
-                    <!-- 登入/會員狀態按鈕 -->
-                    <div id="auth-container" class="ml-4 border-l pl-4 border-slate-200">
-                        <button id="login-btn" onclick="signInWithGoogle()" class="flex items-center text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors">
-                            <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-                            登入同步
-                        </button>
-                        <div id="user-profile" class="hidden flex items-center gap-3 cursor-pointer" onclick="signOut()">
-                            <img id="user-avatar" src="" class="w-8 h-8 rounded-full border border-slate-200" alt="Avatar">
-                            <span id="user-name" class="text-sm font-medium text-slate-700 hidden lg:block">User</span>
-                            <span class="text-xs text-slate-400 hover:text-red-500 hidden lg:block">(登出)</span>
-                        </div>
-                    </div>
                 </nav>
-                
-                <div class="md:hidden flex items-center gap-3">
-                    <button id="mobile-login-btn" onclick="signInWithGoogle()" class="text-xs font-bold text-white bg-blue-600 px-3 py-1.5 rounded">登入</button>
+                <div class="md:hidden">
                     <button onclick="toggleMobileMenu()" class="p-2 text-slate-600 hover:text-blue-600 focus:outline-none">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                     </button>
@@ -74,19 +49,12 @@
             </div>
         </div>
 
+        <!-- 手機版下拉選單 -->
         <div id="mobile-menu" class="hidden md:hidden bg-white border-b border-slate-200 absolute w-full shadow-lg z-30 left-0 top-14">
             <div class="px-4 py-2 space-y-1">
                 <button onclick="switchView('home'); toggleMobileMenu()" class="mobile-nav-btn block w-full text-left px-4 py-3 rounded-lg text-base font-medium text-slate-700 active:bg-blue-50" data-target="home">儀表板</button>
                 <button onclick="switchView('training'); toggleMobileMenu()" class="mobile-nav-btn block w-full text-left px-4 py-3 rounded-lg text-base font-medium text-slate-700 active:bg-blue-50" data-target="training">基礎訓練營</button>
                 <button onclick="switchView('exam'); toggleMobileMenu()" class="mobile-nav-btn block w-full text-left px-4 py-3 rounded-lg text-base font-medium text-slate-700 active:bg-blue-50" data-target="exam">實戰模擬考</button>
-                <button onclick="switchView('notebook'); toggleMobileMenu()" class="mobile-nav-btn block w-full text-left px-4 py-3 rounded-lg text-base font-bold text-blue-600 active:bg-blue-50" data-target="notebook">錯題本</button>
-                <div id="mobile-user-profile" class="hidden px-4 py-3 border-t border-slate-100 mt-2 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <img id="mobile-user-avatar" src="" class="w-6 h-6 rounded-full" alt="Avatar">
-                        <span id="mobile-user-name" class="text-sm font-medium text-slate-700">User</span>
-                    </div>
-                    <button onclick="signOut(); toggleMobileMenu()" class="text-sm text-red-500">登出</button>
-                </div>
             </div>
         </div>
     </header>
@@ -94,10 +62,11 @@
     <!-- 主要內容區 -->
     <main class="flex-grow overflow-y-auto relative">
         
+        <!-- 視圖 1: 首頁/儀表板 -->
         <div id="view-home" class="view-section max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 animate-fade-in">
             <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 md:p-8 text-white shadow-lg mb-6 md:mb-8">
-                <h1 class="text-2xl md:text-3xl font-bold mb-2" id="welcome-message">歡迎來到 IELTS Pro</h1>
-                <p class="text-blue-100 text-sm md:text-base mb-6">登入即可解鎖雲端錯題本，無縫記錄您的寫作軌跡。</p>
+                <h1 class="text-2xl md:text-3xl font-bold mb-2">歡迎回來，準備好練習了嗎？</h1>
+                <p class="text-blue-100 text-sm md:text-base mb-6">已擴充至數百題專屬題庫，穩紮穩打突破雅思寫作。</p>
                 <div class="flex flex-col sm:flex-row gap-3">
                     <button onclick="switchView('training')" class="w-full sm:w-auto bg-white text-blue-600 hover:bg-blue-50 font-bold py-3 px-6 rounded-xl shadow transition-colors text-center">
                         進入基礎訓練營
@@ -109,39 +78,46 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 md:p-6 cursor-pointer hover:shadow-md transition-shadow" onclick="switchView('notebook')">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 md:p-6">
                     <div class="flex items-center justify-between mb-3">
-                        <h3 class="font-bold text-base md:text-lg text-slate-800 flex items-center">
-                            <svg class="w-5 h-5 mr-2 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
-                            我的錯題本
-                        </h3>
+                        <h3 class="font-bold text-base md:text-lg text-slate-800">每日訓練卡片</h3>
+                        <span class="bg-orange-100 text-orange-600 text-xs font-bold px-2 py-1 rounded-full">進行中</span>
                     </div>
-                    <p class="text-slate-500 text-xs md:text-sm mb-4">收藏您不熟悉的單字與句型，考前衝刺必備。</p>
-                    <div class="text-right">
-                        <span class="text-blue-600 font-bold text-sm">點擊查看收藏 →</span>
+                    <p class="text-slate-500 text-xs md:text-sm mb-4">累積高頻詞彙與同義替換能力。</p>
+                    <div class="w-full bg-slate-100 rounded-full h-2 mb-2">
+                        <div class="bg-blue-500 h-2 rounded-full" style="width: 10%"></div>
                     </div>
+                    <p class="text-right text-xs text-slate-400">尚未完成挑戰</p>
                 </div>
                 
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 md:p-6 md:col-span-2">
                     <h3 class="font-bold text-base md:text-lg text-slate-800 mb-3">模擬考紀錄</h3>
                     <div class="flex items-center justify-center h-28 md:h-32 bg-slate-50 rounded-lg border border-dashed border-slate-300">
-                        <p class="text-slate-400 text-sm">此功能建構中，敬請期待。</p>
+                        <p class="text-slate-400 text-sm">尚未有完整的模擬考紀錄。</p>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- 視圖 2: 基礎訓練營 -->
         <div id="view-training" class="view-section hidden max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+            
             <div class="flex space-x-2 border-b border-slate-200 mb-4 md:mb-6">
-                <button onclick="setTrainingLevel(1)" id="tab-level-1" class="flex-1 sm:flex-initial px-3 py-2.5 text-sm md:text-base font-bold text-blue-600 border-b-2 border-blue-600 transition-colors text-center">Level 1: 詞彙暖身</button>
-                <button onclick="setTrainingLevel(2)" id="tab-level-2" class="flex-1 sm:flex-initial px-3 py-2.5 text-sm md:text-base font-medium text-slate-500 hover:text-blue-600 transition-colors text-center">Level 2: 句型改寫</button>
+                <button onclick="setTrainingLevel(1)" id="tab-level-1" class="flex-1 sm:flex-initial px-3 py-2.5 text-sm md:text-base font-bold text-blue-600 border-b-2 border-blue-600 transition-colors text-center">
+                    Level 1: 詞彙暖身
+                </button>
+                <button onclick="setTrainingLevel(2)" id="tab-level-2" class="flex-1 sm:flex-initial px-3 py-2.5 text-sm md:text-base font-medium text-slate-500 hover:text-blue-600 transition-colors text-center">
+                    Level 2: 句型改寫
+                </button>
             </div>
 
-            <!-- Level 1 -->
+            <!-- Level 1: 詞彙暖身區 -->
             <div id="training-level-1">
                 <div class="mb-4 md:mb-6">
-                    <h2 class="text-xl md:text-2xl font-bold text-slate-800 mb-1">詞彙暖身</h2>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
+                    <h2 class="text-xl md:text-2xl font-bold text-slate-800 mb-1">詞彙暖身 (Vocabulary Builder)</h2>
+                    <p class="text-slate-500 text-xs md:text-sm mb-3">選取訓練模式進行練習（已載入擴充題庫）：</p>
+                    
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         <button onclick="setVocabMode('synonym')" id="btn-mode-synonym" class="vocab-mode-btn bg-blue-50 border-2 border-blue-500 text-blue-700 font-bold py-2 px-2 rounded-lg text-xs md:text-sm text-center">同義詞替換 (300題)</button>
                         <button onclick="setVocabMode('collocation')" id="btn-mode-collocation" class="vocab-mode-btn bg-white border border-slate-200 text-slate-600 font-medium py-2 px-2 rounded-lg text-xs md:text-sm text-center">高頻搭配詞 (100題)</button>
                         <button onclick="setVocabMode('wordFamily')" id="btn-mode-wordFamily" class="vocab-mode-btn bg-white border border-slate-200 text-slate-600 font-medium py-2 px-2 rounded-lg text-xs md:text-sm text-center">詞性轉換</button>
@@ -153,61 +129,69 @@
                     <div class="p-4 md:p-6 border-b border-slate-100 bg-slate-50">
                         <span id="vocab-instruction" class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">題目指示</span>
                         <p id="vocab-prompt" class="text-base md:text-lg font-medium text-slate-800 leading-relaxed">載入中...</p>
-                        <button onclick="loadVocabQuestion()" class="mt-3 text-xs md:text-sm text-blue-600 hover:text-blue-800 flex items-center font-medium">換一題</button>
+                        <button onclick="loadVocabQuestion()" class="mt-3 text-xs md:text-sm text-blue-600 hover:text-blue-800 flex items-center font-medium">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                            換一題 (隨機抽取)
+                        </button>
                     </div>
                     <div class="p-4 md:p-6">
                         <input type="text" id="vocab-input-single" class="w-full p-3 md:p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-base" placeholder="請輸入答案..." autocomplete="off">
-                        <textarea id="vocab-input-multi" class="hidden-mode w-full h-28 p-3 md:p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none text-base" placeholder="請在此輸入您的句子..."></textarea>
+                        <textarea id="vocab-input-multi" class="hidden-mode w-full h-28 p-3 md:p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none text-base" placeholder="請在此輸入您的句子..." spellcheck="false"></textarea>
                         
                         <div class="mt-4 flex justify-end">
-                            <button id="vocab-submit-btn" onclick="submitVocab()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl transition-colors">送出並讓 AI 批改</button>
+                            <button id="vocab-submit-btn" onclick="submitVocab()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl transition-colors flex justify-center items-center">
+                                送出並讓 AI 批改
+                            </button>
                         </div>
                     </div>
 
-                    <div id="vocab-feedback-area" class="hidden-mode border-t border-slate-200 bg-blue-50 p-4 md:p-6 relative">
+                    <div id="vocab-feedback-area" class="hidden-mode border-t border-slate-200 bg-blue-50 p-4 md:p-6">
                         <div id="vocab-loading" class="hidden-mode flex flex-col items-center justify-center py-4">
-                            <div class="spinner mb-3"></div><p class="text-slate-500 text-xs md:text-sm">AI 分析中...</p>
+                            <div class="spinner mb-3"></div>
+                            <p class="text-slate-500 text-xs md:text-sm">AI 正在仔細分析您的答案...</p>
                         </div>
                         <div id="vocab-result" class="hidden-mode">
-                            <div class="flex justify-between items-start mb-2">
-                                <h4 class="font-bold text-blue-800 flex items-center text-sm md:text-base">AI 解析與建議</h4>
-                                <button onclick="saveToNotebook('vocab')" class="flex items-center text-xs md:text-sm font-bold text-yellow-600 bg-yellow-100 hover:bg-yellow-200 px-3 py-1.5 rounded-lg transition-colors shadow-sm">
-                                    ⭐ 收藏此題
-                                </button>
-                            </div>
+                            <h4 class="font-bold text-blue-800 mb-2 flex items-center text-sm md:text-base">
+                                <svg class="w-5 h-5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                AI 解析與建議
+                            </h4>
                             <div id="vocab-result-text" class="prose prose-blue max-w-none text-slate-700 text-xs md:text-sm leading-relaxed"></div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Level 2 -->
+            <!-- Level 2: 句型改寫區 -->
             <div id="training-level-2" class="hidden-mode">
                 <div class="mb-4 md:mb-6">
                     <h2 class="text-xl md:text-2xl font-bold text-slate-800 mb-1">句型改寫 (Paraphrasing)</h2>
+                    <p class="text-slate-500 text-xs md:text-sm">重新表述原句意思，養成高級句型變化能力。</p>
                 </div>
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                     <div class="p-4 md:p-6 border-b border-slate-100 bg-slate-50">
                         <span class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">原句 (Original Sentence)</span>
                         <p id="gym-original-text" class="text-base md:text-lg font-medium text-slate-800">Many people think that studying abroad is a good idea for university students.</p>
-                        <button onclick="randomizeGymSentence()" class="mt-3 text-xs md:text-sm text-blue-600 hover:text-blue-800 flex items-center font-medium">換一題</button>
+                        <button onclick="randomizeGymSentence()" class="mt-3 text-xs md:text-sm text-blue-600 hover:text-blue-800 flex items-center font-medium">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                            換一題
+                        </button>
                     </div>
                     <div class="p-4 md:p-6">
-                        <textarea id="gym-input" class="w-full h-32 p-3 md:p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none text-base" placeholder="請在此輸入您改寫後的句子..."></textarea>
+                        <textarea id="gym-input" class="w-full h-32 p-3 md:p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none text-base" placeholder="請在此輸入您改寫後的句子..." spellcheck="false"></textarea>
                         <div class="mt-4 flex justify-end">
-                            <button id="gym-submit-btn" onclick="submitGym()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl transition-colors">AI 批改</button>
+                            <button id="gym-submit-btn" onclick="submitGym()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl transition-colors flex justify-center items-center">
+                                AI 批改
+                            </button>
                         </div>
                     </div>
 
                     <div id="gym-feedback-area" class="hidden-mode border-t border-slate-200 bg-blue-50 p-4 md:p-6">
-                        <div id="gym-loading" class="hidden-mode flex flex-col items-center justify-center py-4"><div class="spinner mb-3"></div></div>
+                        <div id="gym-loading" class="hidden-mode flex flex-col items-center justify-center py-4">
+                            <div class="spinner mb-3"></div>
+                            <p class="text-slate-500 text-xs md:text-sm">AI 分析中...</p>
+                        </div>
                         <div id="gym-result" class="hidden-mode">
-                            <div class="flex justify-between items-start mb-2">
-                                <h4 class="font-bold text-blue-800 text-sm md:text-base">AI 評語</h4>
-                                <button onclick="saveToNotebook('gym')" class="flex items-center text-xs md:text-sm font-bold text-yellow-600 bg-yellow-100 hover:bg-yellow-200 px-3 py-1.5 rounded-lg transition-colors shadow-sm">
-                                    ⭐ 收藏此題
-                                </button>
-                            </div>
+                            <h4 class="font-bold text-blue-800 mb-2 text-sm md:text-base">AI 評語</h4>
                             <div id="gym-result-text" class="prose prose-blue max-w-none text-slate-700 text-xs md:text-sm"></div>
                         </div>
                     </div>
@@ -215,431 +199,472 @@
             </div>
         </div>
 
-        <div id="view-notebook" class="view-section hidden max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl md:text-3xl font-bold text-slate-800 flex items-center">
-                    <svg class="w-8 h-8 mr-3 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
-                    我的專屬錯題本
-                </h2>
-                <button onclick="loadNotebook()" class="text-sm text-blue-600 hover:underline">重新整理</button>
-            </div>
-            
-            <div id="notebook-unauth" class="bg-white rounded-xl shadow-sm border border-slate-200 p-10 text-center">
-                <svg class="w-16 h-16 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                <h3 class="text-lg font-bold text-slate-700 mb-2">尚未登入</h3>
-                <p class="text-slate-500 mb-4">請先使用 Google 帳號登入，即可解鎖並跨裝置同步您的錯題本。</p>
-                <button onclick="signInWithGoogle()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg">立即登入</button>
-            </div>
-
-            <div id="notebook-loading" class="hidden flex justify-center py-10">
-                <div class="spinner"></div>
-            </div>
-
-            <div id="notebook-empty" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 p-10 text-center">
-                <p class="text-slate-500">您的錯題本目前是空的。趕快去基礎訓練營挑戰並收藏題目吧！</p>
-            </div>
-
-            <!-- 收藏卡片列表 -->
-            <div id="notebook-list" class="hidden space-y-4">
-                <!-- 動態插入卡片 -->
-            </div>
-        </div>
-
+        <!-- 視圖 3: 實戰模擬考 -->
         <div id="view-exam" class="view-section hidden h-full flex flex-col">
-            <!-- ... 原有模擬考 HTML 結構保留不變 ... -->
             <div class="bg-slate-800 text-slate-200 px-4 md:px-6 py-2.5 flex justify-between items-center shadow-inner shrink-0">
                 <span class="font-bold text-white tracking-wider text-xs md:text-base truncate">Task 2 Mock</span>
                 <div class="flex items-center space-x-3 md:space-x-6">
-                    <div class="flex items-center bg-slate-700 px-2.5 py-1 rounded font-mono text-sm"><span id="exam-timer" class="font-bold text-white">40:00</span></div>
-                    <div class="text-xs md:text-sm">Words: <span id="exam-word-count" class="font-bold text-white">0</span></div>
-                    <button id="exam-submit-btn" onclick="submitExam()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-1 px-3 rounded text-xs md:text-sm">繳卷</button>
+                    <div class="flex items-center bg-slate-700 px-2.5 py-1 rounded font-mono text-sm">
+                        <span id="exam-timer" class="font-bold text-white">40:00</span>
+                    </div>
+                    <div class="text-xs md:text-sm">
+                        Words: <span id="exam-word-count" class="font-bold text-white">0</span>
+                    </div>
+                    <button id="exam-submit-btn" onclick="submitExam()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-1 px-3 rounded text-xs md:text-sm">
+                        繳卷
+                    </button>
                 </div>
             </div>
+
             <div class="flex md:hidden bg-slate-200 p-1 border-b border-slate-300 shrink-0">
                 <button onclick="toggleExamMobileTab('prompt')" id="exam-tab-prompt" class="flex-1 py-1.5 text-xs font-bold bg-white text-slate-800 rounded shadow-sm text-center">檢視題目</button>
                 <button onclick="toggleExamMobileTab('input')" id="exam-tab-input" class="flex-1 py-1.5 text-xs font-medium text-slate-600 rounded text-center">寫作區</button>
             </div>
+
             <div class="flex flex-col md:flex-row flex-grow overflow-hidden bg-slate-100 p-2 gap-2">
                 <div id="exam-prompt-box" class="w-full md:w-[45%] bg-white rounded shadow-sm flex flex-col overflow-y-auto p-4 md:p-6">
                     <span class="inline-block border-b-2 border-slate-800 pb-1 font-bold text-sm md:text-base mb-3 uppercase tracking-widest">Writing Task 2</span>
+                    <p class="text-slate-500 mb-3 text-xs md:text-sm">Spend about 40 minutes on this task.</p>
+                    
                     <div class="bg-slate-50 border-l-4 border-slate-800 p-4 mb-4">
-                        <p id="exam-prompt" class="text-sm md:text-base text-slate-800 font-medium leading-relaxed">Some people think that universities should provide graduates with the knowledge and skills needed in the workplace. Others think that the true function of a university should be to give access to knowledge for its own sake, regardless of whether the course is useful to an employer.<br><br>Discuss both these views and give your own opinion.</p>
+                        <p id="exam-prompt" class="text-sm md:text-base text-slate-800 font-medium leading-relaxed">
+                            Some people think that universities should provide graduates with the knowledge and skills needed in the workplace. Others think that the true function of a university should be to give access to knowledge for its own sake, regardless of whether the course is useful to an employer.
+                            <br><br>
+                            Discuss both these views and give your own opinion.
+                        </p>
                     </div>
+                    <p class="text-slate-500 text-xs md:text-sm">Write at least 250 words.</p>
                 </div>
+
                 <div id="exam-input-box" class="hidden-mode md:flex w-full md:w-[55%] bg-white rounded shadow-sm flex-col relative flex-grow">
-                    <textarea id="exam-input" class="exam-textarea w-full flex-grow p-4 md:p-6 text-base md:text-lg text-slate-800 leading-relaxed outline-none resize-none" placeholder="Start writing here..." spellcheck="false"></textarea>
+                    <textarea id="exam-input" 
+                              class="exam-textarea w-full flex-grow p-4 md:p-6 text-base md:text-lg text-slate-800 leading-relaxed outline-none resize-none" 
+                              placeholder="Start writing here..." 
+                              spellcheck="false" 
+                              autocomplete="off"></textarea>
+                    
                     <div id="exam-overlay" class="hidden absolute inset-0 bg-white/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-4">
-                        <div class="spinner border-blue-600 mb-4"></div><h3 class="text-lg md:text-xl font-bold text-slate-800 mb-1">AI 考官批改中...</h3>
+                        <div class="spinner border-blue-600 mb-4"></div>
+                        <h3 class="text-lg md:text-xl font-bold text-slate-800 mb-1">AI 考官批改中...</h3>
+                        <p class="text-slate-500 text-xs md:text-sm text-center">正在分析寫作分數，請稍候...</p>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- 視圖 4: 模考成績單 -->
         <div id="view-result" class="view-section hidden max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-xl md:text-2xl font-bold text-slate-800">評分診斷報告</h2>
-                <button onclick="switchView('exam')" class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center">← 返回考場</button>
+                <button onclick="switchView('exam')" class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center">
+                    ← 返回考場
+                </button>
             </div>
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 md:p-8">
                 <div id="result-content" class="prose prose-blue max-w-none text-slate-700 text-sm md:text-base"></div>
             </div>
         </div>
+
     </main>
 
-    <!-- 提示彈跳窗 -->
     <div id="custom-modal" class="hidden fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 animate-fade-in">
             <h3 id="modal-title" class="text-lg font-bold text-slate-800 mb-2">提示</h3>
             <p id="modal-message" class="text-slate-600 text-sm mb-6">訊息內容</p>
             <div class="flex justify-end">
-                <button onclick="closeModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-5 rounded-lg text-sm">確定</button>
+                <button onclick="closeModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-5 rounded-lg text-sm">
+                    確定
+                </button>
             </div>
         </div>
     </div>
 
     <script>
-        // ==========================================
-        // 1. 設定區 (API Keys)
-        // ==========================================
-        const GEMINI_API_KEY = ""; // 系統會自動帶入您的 Gemini 金鑰
-        
-        // 請確認這個是您申請的 Firebase 設定 (公開無妨)
-        const firebaseConfig = {
-            apiKey: "AIzaSyDZCkTkGorHryGTz2N9ZgiDfTonVHUz_4A",
-            authDomain: "ielts-practice-c7117.firebaseapp.com",
-            databaseURL: "https://ielts-practice-c7117-default-rtdb.firebaseio.com",
-            projectId: "ielts-practice-c7117",
-            storageBucket: "ielts-practice-c7117.firebasestorage.app",
-            messagingSenderId: "977969080615",
-            appId: "1:977969080615:web:6c4137f29aefd6993d6102",
-            measurementId: "G-BGBXZ3TZBM"
-        };
-
-        // ==========================================
-        // 2. 初始化 Firebase & 狀態
-        // ==========================================
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+        const apiKey = ""; 
 
         const state = {
             currentView: 'home',
             timerInterval: null,
             timeRemaining: 40 * 60,
             isExamRunning: false,
-            currentVocabMode: 'synonym',
-            user: null,
-            
-            // 暫存目前的作答，方便存入資料庫
-            lastVocabQ: '',
-            lastVocabA: '',
-            lastVocabFeedback: '',
-            lastGymQ: '',
-            lastGymA: '',
-            lastGymFeedback: ''
+            currentVocabMode: 'synonym'
         };
 
-        // ==========================================
-        // 3. 登入與會員狀態管理
-        // ==========================================
-        const provider = new firebase.auth.GoogleAuthProvider();
-
-        function signInWithGoogle() {
-            auth.signInWithPopup(provider).catch(error => {
-                showModal('登入失敗', error.message);
-            });
-        }
-
-        function signOut() {
-            if(confirm("確定要登出嗎？")) {
-                auth.signOut();
-            }
-        }
-
-        // 監聽登入狀態改變
-        auth.onAuthStateChanged(user => {
-            state.user = user;
-            const loginBtn = document.getElementById('login-btn');
-            const userProfile = document.getElementById('user-profile');
-            const mobileLoginBtn = document.getElementById('mobile-login-btn');
-            const mobileUserProfile = document.getElementById('mobile-user-profile');
-            
-            if (user) {
-                // 已登入：隱藏登入按鈕，顯示頭像
-                loginBtn.classList.add('hidden');
-                userProfile.classList.remove('hidden');
-                document.getElementById('user-avatar').src = user.photoURL;
-                document.getElementById('user-name').innerText = user.displayName.split(' ')[0];
-                document.getElementById('welcome-message').innerText = `歡迎回來，${user.displayName.split(' ')[0]}！`;
-
-                mobileLoginBtn.classList.add('hidden');
-                mobileUserProfile.classList.remove('hidden');
-                document.getElementById('mobile-user-avatar').src = user.photoURL;
-                document.getElementById('mobile-user-name').innerText = user.displayName.split(' ')[0];
-
-                if(state.currentView === 'notebook') loadNotebook();
-            } else {
-                // 未登入
-                loginBtn.classList.remove('hidden');
-                userProfile.classList.add('hidden');
-                document.getElementById('welcome-message').innerText = `歡迎來到 IELTS Pro`;
-                
-                mobileLoginBtn.classList.remove('hidden');
-                mobileUserProfile.classList.add('hidden');
-                
-                if(state.currentView === 'notebook') loadNotebook(); // 會顯示未登入提示
-            }
-        });
-
-        // ==========================================
-        // 4. 資料庫功能：收藏錯題
-        // ==========================================
-        async function saveToNotebook(type) {
-            if (!state.user) {
-                showModal('需要登入', '請先使用 Google 帳號登入，才能將題目收藏到雲端錯題本。');
-                return;
-            }
-
-            let data = {};
-            if (type === 'vocab') {
-                data = {
-                    type: 'vocab',
-                    mode: state.currentVocabMode,
-                    prompt: state.lastVocabQ,
-                    answer: state.lastVocabA,
-                    feedback: state.lastVocabFeedback,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                };
-            } else if (type === 'gym') {
-                data = {
-                    type: 'gym',
-                    prompt: state.lastGymQ,
-                    answer: state.lastGymA,
-                    feedback: state.lastGymFeedback,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                };
-            }
-
-            try {
-                // 儲存到 users/{uid}/notebook 集合中
-                await db.collection('users').doc(state.user.uid).collection('notebook').add(data);
-                showModal('成功', '✅ 已成功儲存至您的專屬錯題本！');
-            } catch (error) {
-                console.error(error);
-                showModal('儲存失敗', '請確認您的網路連線。');
-            }
-        }
-
-        async function loadNotebook() {
-            document.getElementById('notebook-unauth').classList.add('hidden');
-            document.getElementById('notebook-empty').classList.add('hidden');
-            document.getElementById('notebook-list').classList.add('hidden');
-            
-            if (!state.user) {
-                document.getElementById('notebook-loading').classList.add('hidden');
-                document.getElementById('notebook-unauth').classList.remove('hidden');
-                return;
-            }
-
-            document.getElementById('notebook-loading').classList.remove('hidden');
-            const listEl = document.getElementById('notebook-list');
-            listEl.innerHTML = ''; // 清空列表
-
-            try {
-                const snapshot = await db.collection('users').doc(state.user.uid)
-                                         .collection('notebook')
-                                         .orderBy('timestamp', 'desc').get();
-
-                document.getElementById('notebook-loading').classList.add('hidden');
-
-                if (snapshot.empty) {
-                    document.getElementById('notebook-empty').classList.remove('hidden');
-                    return;
-                }
-
-                document.getElementById('notebook-list').classList.remove('hidden');
-
-                snapshot.forEach(doc => {
-                    const item = doc.data();
-                    const card = document.createElement('div');
-                    card.className = "bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative";
-                    
-                    let badgeColor = item.type === 'vocab' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700';
-                    let typeName = item.type === 'vocab' ? `詞彙練習 (${item.mode})` : '句型改寫';
-
-                    card.innerHTML = `
-                        <div class="flex justify-between items-start mb-3">
-                            <span class="text-xs font-bold px-2 py-1 rounded ${badgeColor}">${typeName}</span>
-                            <button onclick="deleteNotebookItem('${doc.id}')" class="text-slate-400 hover:text-red-500 text-sm">刪除</button>
-                        </div>
-                        <div class="mb-3">
-                            <span class="block text-xs font-bold text-slate-400 mb-1">原句/題目</span>
-                            <p class="text-slate-800 font-medium text-sm md:text-base">${item.prompt}</p>
-                        </div>
-                        <div class="mb-3 bg-red-50 p-3 rounded text-sm text-red-800 border border-red-100">
-                            <span class="block text-xs font-bold text-red-400 mb-1">我的答案</span>
-                            ${item.answer}
-                        </div>
-                        <div class="bg-green-50 p-3 rounded text-sm text-green-900 border border-green-100 prose prose-sm max-w-none">
-                            <span class="block text-xs font-bold text-green-600 mb-1">AI 解析</span>
-                            ${parseMarkdown(item.feedback)}
-                        </div>
-                    `;
-                    listEl.appendChild(card);
-                });
-            } catch (error) {
-                document.getElementById('notebook-loading').classList.add('hidden');
-                console.error(error);
-                showModal('讀取失敗', '無法載入錯題本，請檢查 Firestore 安全規則設定。');
-            }
-        }
-
-        async function deleteNotebookItem(docId) {
-            if(confirm("確定要從錯題本中移除這題嗎？")) {
-                try {
-                    await db.collection('users').doc(state.user.uid).collection('notebook').doc(docId).delete();
-                    loadNotebook(); // 重新整理
-                } catch(e) {
-                    showModal('刪除失敗', e.message);
-                }
-            }
-        }
-
-        // ==========================================
-        // 5. 題庫與 AI 邏輯 (保留並修改以便暫存)
-        // ==========================================
-        
+        // -------------------------------------------------------------
+        // 動態生成龐大題庫系統
+        // -------------------------------------------------------------
         const generateQuestions = () => {
             const wrap = (word) => `<span class='text-blue-600 font-bold'>[ ${word} ]</span>`;
             const q = { synonym: [], collocation: [], wordFamily: [], keyword: [] };
-            const synData = [ { w: "bad", s: ["Air pollution is a very _ problem."] }, { w: "good", s: ["Studying abroad is a _ opportunity."] } ];
-            synData.forEach(g => g.s.forEach(s => q.synonym.push({ instruction: "請輸入適當的進階同義詞", prompt: s.replace("_", wrap(g.w)) })));
-            const colData = [ { w: "action", s: ["The government needs to _ action immediately."] } ];
-            colData.forEach(g => g.s.forEach(s => q.collocation.push({ instruction: "請填入適合搭配畫線單字的詞", prompt: s.replace("_", wrap("______")) })));
-            q.wordFamily.push({ instruction: "Rely (動詞) -> 請填寫名詞形式", prompt: "Over-[ ______ ] on technology is dangerous." });
-            q.keyword.push({ instruction: "請用以下單字造句", prompt: "提示單字：<br><span class='text-blue-600 font-bold'>Beneficial</span>, <span class='text-blue-600 font-bold'>Society</span>" });
+
+            // 1. Synonym (30個單字)
+            const synData = [
+                { w: "bad", s: ["Air pollution is a very _ problem.", "Junk food has a _ impact on health.", "A lack of sleep can lead to _ academic performance.", "The economic crisis had _ consequences.", "Overpopulation is a _ issue in cities.", "Excessive screen time has _ effects on eyesight.", "Deforestation is _ to the global climate.", "Violent video games are _ for teenagers.", "Using plastic bags is _ for the ecosystem.", "A sedentary lifestyle is _ for long-term health."] },
+                { w: "good", s: ["Studying abroad is a _ opportunity for students.", "A balanced diet has a _ effect on well-being.", "Renewable energy provides a _ alternative to fossil fuels.", "Learning a second language brings _ results.", "Public transport is a _ choice for reducing emissions.", "Exercise is _ for mental health.", "Reading offers a _ way to acquire knowledge.", "Teamwork is a _ strategy in the workplace.", "Having a hobby is _ for stress relief.", "The government policy had a _ impact on the economy."] },
+                { w: "big", s: ["There has been a _ change in communication.", "The company made a _ profit this year.", "Climate change is a _ challenge for humanity.", "Urbanization causes a _ increase in traffic.", "A _ number of people rely on the internet.", "The gap between rich and poor is a _ problem.", "Technology plays a _ role in education.", "The project requires a _ amount of funding.", "Pollution is a _ threat to wildlife.", "Stress has a _ influence on productivity."] },
+                { w: "important", s: ["Education is _ for a child's development.", "It is _ to protect endangered species.", "Water is an _ resource for all living things.", "Communication skills are _ in the workplace.", "Family support is _ for mental stability.", "The internet has become an _ tool.", "Recycling is an _ step to save the Earth.", "Diet plays an _ part in staying healthy.", "It is _ for governments to invest in science.", "Time management is _ for success."] },
+                { w: "get", s: ["Students go to university to _ knowledge.", "Employees want to _ a higher salary.", "Governments must _ information about the crisis.", "Many people _ their news from social media.", "It is hard for young people to _ a job.", "Countries can _ benefits from international trade.", "Children _ skills through playing.", "Companies _ profits by lowering costs.", "Patients _ treatment at the new hospital.", "Citizens should _ the right to vote."] },
+                { w: "use", s: ["Many students _ the internet for research.", "Factories _ a large amount of electricity.", "Teachers should _ technology in classrooms.", "People _ public transport to commute.", "We must find new ways to _ solar energy.", "Companies _ advertisements to attract customers.", "Criminals _ technology to commit fraud.", "Farmers _ chemicals to grow crops faster.", "Artists _ different materials to express themselves.", "Governments _ tax money to build infrastructure."] },
+                { w: "show", s: ["The chart _ an increase in population.", "Recent studies _ that exercise improves mood.", "The results _ a clear difference between the two groups.", "History _ that wars cause economic ruin.", "The statistics _ a decline in reading habits.", "His actions _ a lack of responsibility.", "The survey _ that most people prefer working from home.", "Evidence _ that climate change is real.", "The report _ the need for better healthcare.", "Experiments _ the effectiveness of the new drug."] },
+                { w: "change", s: ["Technology will _ the way we live.", "The government needs to _ its policy on immigration.", "We must _ our habits to protect the environment.", "The internet has _ the global economy.", "Education can _ a person's future.", "City life has _ significantly over the past decade.", "Climate patterns are beginning to _ rapidly.", "Social media has _ human interaction.", "The new manager wants to _ the company structure.", "Travel can _ a person's perspective on life."] },
+                { w: "many", s: ["There are _ reasons for this phenomenon.", "People face _ difficulties when moving abroad.", "_ students struggle with mathematics.", "The internet provides _ opportunities for learning.", "Cities suffer from _ environmental problems.", "_ animals are losing their habitats.", "There are _ advantages to learning online.", "The project requires _ resources.", "_ experts believe that AI will replace jobs.", "_ countries are investing in renewable energy."] },
+                { w: "problem", s: ["Traffic congestion is a serious _ in big cities.", "Unemployment is a major _ for the government.", "Global warming is a global _.", "Obesity has become a common _ among children.", "The housing shortage is a difficult _ to solve.", "Stress is a widespread _ in modern society.", "Poverty remains a persistent _ in rural areas.", "Cyberbullying is a growing _ on the internet.", "Water scarcity is an urgent _.", "Lack of funding is the main _ for the research."] },
+                { w: "happy", s: ["The team was very _ with the results.", "Winning the competition made her _.", "They had a _ childhood.", "The customers are _ with the new service.", "He felt _ after finishing the difficult task.", "A _ employee is a productive employee.", "The news made everyone _.", "They live a _ life in the countryside.", "I am _ to announce the new project.", "We are _ to help you with your inquiry."] },
+                { w: "sad", s: ["It is a _ story about a lost dog.", "The movie had a very _ ending.", "He felt _ when his friend moved away.", "The _ news shocked the entire community.", "She had a _ expression on her face.", "It is _ to see so much poverty.", "The team experienced a _ defeat.", "A _ event changed his life forever.", "They were _ about the cancellation of the concert.", "It is a _ reality that many children lack education."] },
+                { w: "hard", s: ["The exam was very _ for most students.", "It is _ to find a good job in this economy.", "She worked _ to achieve her goals.", "Learning a new language can be a _ task.", "They faced many _ challenges.", "It is _ to believe that he is right.", "He made a _ decision.", "The problem is _ to solve.", "It is a _ time for the company.", "The negotiations were _ and stressful."] },
+                { w: "easy", s: ["The test was _ for those who studied.", "It is _ to make mistakes when you are tired.", "He found an _ solution to the problem.", "The instructions were _ to follow.", "Cooking this dish is very _.", "It is not _ to learn a new skill.", "They want to find an _ way out.", "She has an _ life.", "The software is _ to use.", "It is _ to see why people like this brand."] },
+                { w: "interesting", s: ["The book was very _ from start to finish.", "He told an _ story about his travels.", "The lecture presented some _ ideas.", "She has an _ personality.", "It is an _ phenomenon.", "We had an _ conversation.", "The museum has many _ exhibits.", "The findings of the study are quite _.", "He offered an _ perspective on the issue.", "The documentary was very _ and informative."] },
+                { w: "boring", s: ["The lecture was so _ that many students fell asleep.", "He found the task repetitive and _.", "It was a _ movie with no plot.", "The meeting was long and _.", "She has a _ job.", "They live a _ life with no excitement.", "The book was too _ to finish.", "The conversation was dull and _.", "The presentation was _ and uninspiring.", "He complained about the _ routine."] },
+                { w: "beautiful", s: ["She wore a _ dress to the party.", "The sunset over the ocean was _.", "They visited a _ city in Europe.", "The painting is truly _.", "He gave her a _ bouquet of flowers.", "The music was very _.", "They bought a _ house.", "The garden is full of _ flowers.", "She has a _ voice.", "The scenery was _."] },
+                { w: "ugly", s: ["The building has an _ design.", "He made an _ mistake.", "It was an _ situation.", "The truth can sometimes be _.", "They found an _ bug in the system.", "The room was painted in an _ color.", "He said some _ things in anger.", "The scar looked _.", "It was an _ incident.", "The new car model is considered _ by many."] },
+                { w: "fast", s: ["The car was driving very _.", "He is a _ runner.", "The company is growing at a _ pace.", "They need a _ solution.", "She made a _ decision.", "The internet connection is very _.", "He learns _.", "The food was served _.", "The process was _ and efficient.", "They need to act _."] },
+                { w: "slow", s: ["The traffic was very _ this morning.", "He is a _ learner.", "The economic recovery has been _.", "They made _ progress.", "The internet connection is _.", "She speaks in a _ voice.", "The movie had a _ pace.", "He walked at a _ speed.", "The service at the restaurant was _.", "The process is _ and tedious."] },
+                { w: "old", s: ["The building is very _.", "He is an _ man.", "The _ traditions are still observed.", "They live in an _ house.", "The _ ways of doing things are no longer effective.", "She found an _ photograph.", "The _ system needs to be replaced.", "He is an _ friend of mine.", "The _ tree was cut down.", "They visited an _ castle."] },
+                { w: "new", s: ["They bought a _ car.", "She is wearing a _ dress.", "The _ policy will be implemented next month.", "He started a _ job.", "They moved to a _ city.", "The _ technology has changed everything.", "She has a _ perspective on the issue.", "The _ product is very popular.", "He made a _ discovery.", "They are building a _ hospital."] },
+                { w: "rich", s: ["He is a very _ man.", "The country is _ in natural resources.", "The cake was very _ and sweet.", "She has a _ vocabulary.", "They live in a _ neighborhood.", "The history of this city is very _.", "He had a _ experience.", "The soil is _ and fertile.", "The culture is _ and diverse.", "The colors are _ and vibrant."] },
+                { w: "poor", s: ["Many people in the world are _.", "The country has a _ economy.", "He comes from a _ family.", "The quality of the product is _.", "She has _ health.", "The soil in this area is _.", "They received _ service at the restaurant.", "The student has a _ attendance record.", "The animal was in _ condition.", "He made a _ excuse."] },
+                { w: "dangerous", s: ["The road is very _.", "He works in a _ environment.", "The situation is _.", "The criminal is considered _.", "It is _ to walk alone at night.", "The animal is _.", "The chemical is highly _.", "The stunt was _.", "The journey was _.", "The idea is _."] },
+                { w: "safe", s: ["The neighborhood is very _.", "He feels _ at home.", "The food is _ to eat.", "The water is _ to drink.", "They kept the money in a _ place.", "The investment is considered _.", "She had a _ journey.", "The building is _ from fire.", "The procedure is _ and effective.", "It is _ to say that the project was a success."] },
+                { w: "clean", s: ["The room is very _.", "He always wears _ clothes.", "The water in the lake is _.", "The air is _.", "She has a _ record.", "The kitchen must be kept _.", "They live in a _ city.", "The energy is _ and renewable.", "The design is _ and simple.", "He made a _ break from his past."] },
+                { w: "dirty", s: ["The street was very _.", "His hands were _.", "The air in the city is _.", "The water is _ and polluted.", "She wore a _ shirt.", "The kitchen was _.", "They found a _ spot on the carpet.", "He played a _ trick on his friend.", "The money was considered _.", "The scandal was a _ affair."] },
+                { w: "right", s: ["He gave the _ answer.", "She is always _.", "It is the _ thing to do.", "The decision was _.", "He was in the _ place at the _ time.", "The direction is _.", "The price is _.", "The tool is _ for the job.", "It is his _ to speak.", "The timing is _."] },
+                { w: "wrong", s: ["He gave the _ answer.", "She made the _ choice.", "It is _ to steal.", "The direction is _.", "The information was _.", "He was in the _ place at the _ time.", "The approach is _.", "The assumption was _.", "Something is _ with the machine.", "The spelling is _."] }
+            ];
+
+            synData.forEach(group => {
+                group.s.forEach(sentence => {
+                    q.synonym.push({
+                        instruction: "請輸入適當的進階同義詞替換畫線處",
+                        prompt: sentence.replace("_", wrap(group.w))
+                    });
+                });
+            });
+
+            // 2. Collocation (高頻搭配詞) - 10大關鍵字，各10句 = 100題
+            const colData = [
+                { w: "action", s: ["The government needs to _ action immediately.", "We must _ action to stop climate change.", "The school will _ strict action against bullying.", "It is time to _ action on plastic waste.", "Authorities should _ quick action to resolve the crisis.", "Citizens can _ collective action to demand change.", "Failure to _ action will lead to disaster.", "The council decided to _ action on traffic noise.", "We urge the committee to _ prompt action.", "If we do not _ action now, it will be too late."] },
+                { w: "role", s: ["Education _ a crucial role in society.", "Technology _ a major role in our daily lives.", "Parents _ an essential role in raising children.", "The media _ a significant role in shaping public opinion.", "Diet _ a vital role in maintaining health.", "Renewable energy will _ a key role in the future.", "Small businesses _ an important role in the economy.", "Exercise _ a beneficial role in stress management.", "The UN _ a central role in peacekeeping.", "Teachers _ a fundamental role in character building."] },
+                { w: "attention", s: ["People should _ more attention to environmental issues.", "The issue of poverty deserves careful _.", "Students must _ close attention in class.", "The government needs to _ attention to healthcare.", "We must _ attention to the needs of the elderly.", "The new policy has drawn widespread _.", "Media often _ attention to negative news.", "It is crucial to _ special attention to early childhood education.", "The statistics should _ our attention to the growing crime rate.", "Consumers now _ greater attention to food safety."] },
+                { w: "impact", s: ["Pollution has a profound _ on marine life.", "The internet has had a massive _ on communication.", "Economic crises _ a devastating impact on small firms.", "Tourism can _ a negative impact on local cultures.", "Social media has _ a significant impact on teenagers.", "The new law will _ a far-reaching impact.", "Automation is having a profound _ on the job market.", "We must consider the environmental _ of flying.", "Diet has a direct _ on physical health.", "The research explores the _ of stress on sleep."] },
+                { w: "solution", s: ["We must find a viable _ to the traffic problem.", "There is no easy _ to poverty.", "The government proposed a temporary _ to the housing crisis.", "Education is often seen as the best _.", "Technology provides an innovative _ to energy shortages.", "It is difficult to come up with a long-term _.", "The committee is seeking an effective _.", "Implementing strict laws is one possible _.", "We need to explore alternative _s.", "A collaborative approach is the ultimate _."] },
+                { w: "responsibility", s: ["Individuals must take _ for their own actions.", "The government bears the _ for public safety.", "It is our collective _ to protect the planet.", "Parents have a huge _ in educating their kids.", "Corporations should accept social _.", "Teachers carry a heavy _.", "Citizens share the _ of keeping the city clean.", "The manager claimed full _ for the failure.", "Shifting the _ to others is not helpful.", "We cannot avoid our _ towards future generations."] },
+                { w: "awareness", s: ["Campaigns can help raise _ about mental health.", "It is vital to increase public _ of climate change.", "Schools should promote environmental _.", "There is a growing _ of the dangers of smoking.", "The documentary created widespread _.", "We must build _ regarding cyber security.", "The lack of _ is a major obstacle.", "Charities work hard to spread _.", "Greater _ will lead to better choices.", "The government aims to heighten _ of road safety."] },
+                { w: "knowledge", s: ["Students attend university to acquire _.", "Reading widely helps to expand your _.", "Practical experience can deepen our _.", "It is important to share _ with others.", "The internet provides access to vast amounts of _.", "Teachers are responsible for imparting _.", "Theoretical _ is not always enough.", "Workers need to update their _ regularly.", "The course aims to broaden students' _.", "Lack of basic financial _ is a common issue."] },
+                { w: "priority", s: ["The government must give _ to healthcare.", "Economic growth is often considered a top _.", "Environmental protection should be made a high _.", "Safety must always be our first _.", "We need to set clear _ies for the future.", "Funding for education should take _ over military spending.", "Solving unemployment is an urgent _.", "Public transport improvement is a low _ for this council.", "It is time to reorder our national _ies.", "The board established a new set of _ies."] },
+                { w: "measure", s: ["Authorities must implement strict _s to curb crime.", "The government should adopt preventive _s.", "We need to take drastic _s to stop pollution.", "Security _s have been tightened at the airport.", "The school introduced new disciplinary _s.", "Effective _s are required to boost the economy.", "The country took unprecedented _s during the crisis.", "These temporary _s are not a permanent solution.", "We must introduce robust _s to protect data.", "Harsh _s were taken against tax evaders."] }
+            ];
+
+            colData.forEach(group => {
+                group.s.forEach(sentence => {
+                    q.collocation.push({
+                        instruction: "請填入適合搭配畫線單字的動詞/名詞/形容詞",
+                        prompt: sentence.replace("_", wrap("______"))
+                    });
+                });
+            });
+
+            // 3. Word Family (20題)
+            const wfData = [
+                { w: "Rely (動詞) -> 請填寫名詞形式", s: "Over-[ ______ ] on technology is dangerous." },
+                { w: "Benefit (名詞/動詞) -> 請填寫形容詞形式", s: "Reading books is highly [ ______ ] for children." },
+                { w: "Economy (名詞) -> 請填寫形容詞形式", s: "The country is facing severe [ ______ ] problems." },
+                { w: "Environment (名詞) -> 請填寫形容詞形式", s: "Plastic bags cause immense [ ______ ] damage." },
+                { w: "Succeed (動詞) -> 請填寫名詞形式", s: "Hard work is the key to [ ______ ]." },
+                { w: "Technology (名詞) -> 請填寫形容詞形式", s: "We live in a highly [ ______ ] era." },
+                { w: "Society (名詞) -> 請填寫形容詞形式", s: "Poverty is a complex [ ______ ] issue." },
+                { w: "Analyze (動詞) -> 請填寫名詞形式", s: "The report provides a detailed [ ______ ] of the data." },
+                { w: "Create (動詞) -> 請填寫形容詞形式", s: "Art helps develop [ ______ ] thinking." },
+                { w: "Finance (名詞) -> 請填寫形容詞形式", s: "Many students struggle with [ ______ ] difficulties." },
+                { w: "Compete (動詞) -> 請填寫形容詞形式", s: "The job market has become extremely [ ______ ]." },
+                { w: "Consume (動詞) -> 請填寫名詞形式", s: "The over-[ ______ ] of fast food leads to obesity." },
+                { w: "Develop (動詞) -> 請填寫名詞形式", s: "Economic [ ______ ] often comes at the cost of nature." },
+                { w: "Educate (動詞) -> 請填寫形容詞形式", s: "Museums have a highly [ ______ ] purpose." },
+                { w: "Govern (動詞) -> 請填寫名詞形式", s: "The [ ______ ] should pass stricter laws." },
+                { w: "Produce (動詞) -> 請填寫名詞形式", s: "Mass [ ______ ] has lowered the cost of goods." },
+                { w: "Signify (動詞) -> 請填寫形容詞形式", s: "There has been a [ ______ ] increase in global temperatures." },
+                { w: "Tradition (名詞) -> 請填寫形容詞形式", s: "Many young people are abandoning [ ______ ] customs." },
+                { w: "Vary (動詞) -> 請填寫名詞形式", s: "A [ ______ ] of factors contribute to this problem." },
+                { w: "Globally (副詞) -> 請填寫形容詞形式", s: "Climate change is a [ ______ ] crisis." }
+            ];
+            wfData.forEach(item => q.wordFamily.push({ instruction: item.w, prompt: item.s.replace("[ ______ ]", wrap("______")) }));
+
+            // 4. Keyword (造句) (20題)
+            const kwData = [
+                ["Beneficial", "Society"], ["Technology", "Communication"], ["Government", "Fund"],
+                ["Education", "Develop"], ["Environment", "Protect"], ["Economy", "Growth"],
+                ["Culture", "Preserve"], ["Health", "Diet"], ["Crime", "Prevent"], ["Internet", "Access"],
+                ["Advertising", "Consumer"], ["Tourism", "Local"], ["Stress", "Workplace"],
+                ["Transport", "Congestion"], ["Skill", "Employment"], ["Parents", "Influence"],
+                ["Animal", "Habitat"], ["Space", "Exploration"], ["Language", "Barrier"], ["City", "Overpopulation"]
+            ];
+            kwData.forEach(pair => q.keyword.push({
+                instruction: "請用以下單字造一個通順且符合學術語氣的英文句子",
+                prompt: `提示單字：<br><br><span class='text-blue-600 font-bold text-xl'>${pair[0]}</span><br><span class='text-blue-600 font-bold text-xl'>${pair[1]}</span>`
+            }));
+
             return q;
         };
+
         const vocabQuestions = generateQuestions();
 
+        // -------------------------------------------------------------
+        // 共用工具與 API
+        // -------------------------------------------------------------
         function parseMarkdown(text) {
-            return text.replace(/^### (.*$)/gim, '<strong class="block mt-2 mb-1 text-slate-800">$1</strong>')
-                       .replace(/\*\*(.*?)\*\*/gim, '<strong class="font-bold text-blue-800">$1</strong>')
-                       .replace(/\n/gim, '<br>');
+            return text
+                .replace(/^### (.*$)/gim, '<h3 class="text-lg font-bold mt-4 mb-2 text-slate-800">$1</h3>')
+                .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold mt-4 mb-2 border-b pb-1 text-slate-800">$1</h2>')
+                .replace(/\*\*(.*?)\*\*/gim, '<strong class="font-bold text-blue-800">$1</strong>')
+                .replace(/\n/gim, '<br>');
         }
 
         async function callGeminiAPI(prompt, systemInstruction) {
-            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
-            const response = await fetch(endpoint, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], systemInstruction: { parts: [{ text: systemInstruction }] } })
-            });
-            if (!response.ok) throw new Error("API 請求失敗");
-            const data = await response.json();
-            return data.candidates[0].content.parts[0].text;
+            // Updated model endpoint to a stable version
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ 
+                    role: "user",
+                    parts: [{ text: prompt }] 
+                }],
+                systemInstruction: {
+                    role: "user", 
+                    parts: [{ text: systemInstruction }] 
+                }
+            };
+
+            for (let attempt = 0; attempt < 5; attempt++) {
+                try {
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        console.error("API Error Response:", errorData);
+                        throw new Error(`API 請求失敗 (${response.status}): ${errorData.error?.message || '未知錯誤'}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.candidates && data.candidates.length > 0 && data.candidates[0].content.parts.length > 0) {
+                        return data.candidates[0].content.parts[0].text;
+                    } else {
+                         throw new Error("API 回傳格式錯誤或無內容");
+                    }
+                } catch (error) {
+                    console.error("API Call Error Attempt " + attempt + ":", error);
+                    if (attempt === 4) throw new Error("無法連線至 AI 伺服器，或設定有誤：" + error.message);
+                    await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
+                }
+            }
         }
 
-        // ==========================================
-        // 6. UI 控制與送出邏輯
-        // ==========================================
-        
-        function showModal(title, message) { document.getElementById('modal-title').innerText = title; document.getElementById('modal-message').innerText = message; document.getElementById('custom-modal').classList.remove('hidden'); }
+        function showModal(title, message) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-message').innerText = message;
+            document.getElementById('custom-modal').classList.remove('hidden');
+        }
+
         function closeModal() { document.getElementById('custom-modal').classList.add('hidden'); }
         function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
 
         function switchView(viewId) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.nav-btn, .mobile-nav-btn').forEach(btn => btn.classList.remove('text-blue-600', 'bg-blue-50'));
+
             document.getElementById(`view-${viewId}`).classList.remove('hidden');
-            document.querySelectorAll(`.nav-btn[data-target="${viewId}"], .mobile-nav-btn[data-target="${viewId}"]`).forEach(btn => btn.classList.add('text-blue-600', 'bg-blue-50'));
-            
+            document.querySelectorAll(`.nav-btn[data-target="${viewId}"], .mobile-nav-btn[data-target="${viewId}"]`).forEach(btn => {
+                btn.classList.add('text-blue-600', 'bg-blue-50');
+            });
+
             state.currentView = viewId;
-            if (viewId === 'exam' && !state.isExamRunning) startExamTimer();
-            else pauseExamTimer();
-            if (viewId === 'notebook') loadNotebook();
+
+            if (viewId === 'exam') {
+                if (!state.isExamRunning) startExamTimer();
+                toggleExamMobileTab('prompt');
+            } else { pauseExamTimer(); }
+
+            if (viewId === 'training') setTrainingLevel(1);
+        }
+
+        function toggleExamMobileTab(tab) {
+            const promptBox = document.getElementById('exam-prompt-box');
+            const inputBox = document.getElementById('exam-input-box');
+            const tabPrompt = document.getElementById('exam-tab-prompt');
+            const tabInput = document.getElementById('exam-tab-input');
+
+            if (tab === 'prompt') {
+                promptBox.classList.remove('hidden-mode');
+                inputBox.classList.add('hidden-mode');
+                tabPrompt.className = "flex-1 py-1.5 text-xs font-bold bg-white text-slate-800 rounded shadow-sm text-center";
+                tabInput.className = "flex-1 py-1.5 text-xs font-medium text-slate-600 rounded text-center";
+            } else {
+                promptBox.classList.add('hidden-mode');
+                inputBox.classList.remove('hidden-mode');
+                inputBox.classList.add('flex');
+                tabInput.className = "flex-1 py-1.5 text-xs font-bold bg-white text-slate-800 rounded shadow-sm text-center";
+                tabPrompt.className = "flex-1 py-1.5 text-xs font-medium text-slate-600 rounded text-center";
+            }
         }
 
         function setTrainingLevel(level) {
-            document.getElementById('training-level-1').classList.toggle('hidden-mode', level !== 1);
-            document.getElementById('training-level-2').classList.toggle('hidden-mode', level === 1);
-            if(level === 1) setVocabMode(state.currentVocabMode);
+            const tab1 = document.getElementById('tab-level-1');
+            const tab2 = document.getElementById('tab-level-2');
+            
+            if (level === 1) {
+                tab1.className = "flex-1 sm:flex-initial px-3 py-2.5 text-sm md:text-base font-bold text-blue-600 border-b-2 border-blue-600 transition-colors text-center";
+                tab2.className = "flex-1 sm:flex-initial px-3 py-2.5 text-sm md:text-base font-medium text-slate-500 hover:text-blue-600 transition-colors text-center";
+                document.getElementById('training-level-1').classList.remove('hidden-mode');
+                document.getElementById('training-level-2').classList.add('hidden-mode');
+                setVocabMode(state.currentVocabMode);
+            } else {
+                tab2.className = "flex-1 sm:flex-initial px-3 py-2.5 text-sm md:text-base font-bold text-blue-600 border-b-2 border-blue-600 transition-colors text-center";
+                tab1.className = "flex-1 sm:flex-initial px-3 py-2.5 text-sm md:text-base font-medium text-slate-500 hover:text-blue-600 transition-colors text-center";
+                document.getElementById('training-level-1').classList.add('hidden-mode');
+                document.getElementById('training-level-2').classList.remove('hidden-mode');
+            }
         }
 
         function setVocabMode(mode) {
             state.currentVocabMode = mode;
-            document.querySelectorAll('.vocab-mode-btn').forEach(btn => btn.className = "vocab-mode-btn bg-white border border-slate-200 text-slate-600 font-medium py-2 px-2 rounded-lg text-xs md:text-sm text-center");
-            document.getElementById(`btn-mode-${mode}`).className = "vocab-mode-btn bg-blue-50 border-2 border-blue-500 text-blue-700 font-bold py-2 px-2 rounded-lg text-xs md:text-sm text-center";
-            document.getElementById('vocab-input-single').classList.toggle('hidden-mode', mode === 'keyword');
-            document.getElementById('vocab-input-multi').classList.toggle('hidden-mode', mode !== 'keyword');
-            document.getElementById('vocab-feedback-area').classList.add('hidden-mode');
+            document.querySelectorAll('.vocab-mode-btn').forEach(btn => {
+                btn.className = "vocab-mode-btn bg-white border border-slate-200 text-slate-600 font-medium py-2 px-2 rounded-lg text-xs md:text-sm text-center";
+            });
+            const activeBtn = document.getElementById(`btn-mode-${mode}`);
+            if (activeBtn) activeBtn.className = "vocab-mode-btn bg-blue-50 border-2 border-blue-500 text-blue-700 font-bold py-2 px-2 rounded-lg text-xs md:text-sm text-center";
+
+            if (mode === 'keyword') {
+                document.getElementById('vocab-input-single').classList.add('hidden-mode');
+                document.getElementById('vocab-input-multi').classList.remove('hidden-mode');
+            } else {
+                document.getElementById('vocab-input-single').classList.remove('hidden-mode');
+                document.getElementById('vocab-input-multi').classList.add('hidden-mode');
+            }
+
+            hideVocabFeedback();
             loadVocabQuestion();
         }
 
         function loadVocabQuestion() {
-            const questions = vocabQuestions[state.currentVocabMode] || vocabQuestions['synonym'];
+            const mode = state.currentVocabMode;
+            const questions = vocabQuestions[mode] || vocabQuestions['synonym'];
             const q = questions[Math.floor(Math.random() * questions.length)];
+
             document.getElementById('vocab-instruction').innerText = q.instruction;
             document.getElementById('vocab-prompt').innerHTML = q.prompt;
             document.getElementById('vocab-input-single').value = '';
             document.getElementById('vocab-input-multi').value = '';
+            hideVocabFeedback();
+        }
+
+        function hideVocabFeedback() {
             document.getElementById('vocab-feedback-area').classList.add('hidden-mode');
+            document.getElementById('vocab-result').classList.add('hidden-mode');
+            document.getElementById('vocab-loading').classList.add('hidden-mode');
         }
 
         async function submitVocab() {
+            const mode = state.currentVocabMode;
             const rawPrompt = document.getElementById('vocab-prompt').innerText;
-            const input = state.currentVocabMode === 'keyword' ? document.getElementById('vocab-input-multi').value.trim() : document.getElementById('vocab-input-single').value.trim();
-            if (!input) { showModal('提示', '請輸入答案。'); return; }
+            const input = mode === 'keyword' 
+                ? document.getElementById('vocab-input-multi').value.trim()
+                : document.getElementById('vocab-input-single').value.trim();
+
+            if (!input) { showModal('提示', '請先輸入您的答案。'); return; }
 
             document.getElementById('vocab-feedback-area').classList.remove('hidden-mode');
             document.getElementById('vocab-loading').classList.remove('hidden-mode');
             document.getElementById('vocab-result').classList.add('hidden-mode');
 
-            try {
-                const feedback = await callGeminiAPI(`題目：\n${rawPrompt}\n\n學生作答：${input}`, "你是專業雅思老師，請給予簡短評價並補充高級替換詞。使用繁體中文。");
-                
-                // 暫存資料以供收藏
-                state.lastVocabQ = rawPrompt;
-                state.lastVocabA = input;
-                state.lastVocabFeedback = feedback;
+            const sysInstMap = {
+                synonym: "你是專業雅思老師。學生正在練習「同義詞替換」。請判斷學生輸入的單字是否適合替換括號處，給出對或錯的評價，並額外補充 2 個 Band 7+ 的替換詞。全程使用繁體中文。",
+                collocation: "你是專業雅思老師。學生正在練習「高頻搭配詞」。請判斷學生填入的字是否與句意形成正確、道地的英文搭配詞 (Collocation)。糾正錯誤，並給予正確的解說。全程使用繁體中文。",
+                wordFamily: "你是專業雅思老師。學生正在練習「詞性轉換」。檢查學生填入的單字拼寫及詞性是否正確。全程使用繁體中文。",
+                keyword: "你是專業雅思老師。學生正在練習「給字造句」。檢查文法、語意通順度，以及是否正確且自然地使用了提示的單字。給出你的改進建議或示範。全程使用繁體中文。"
+            };
 
+            try {
+                const feedback = await callGeminiAPI(`題目情境：\n${rawPrompt}\n\n學生作答：${input}`, sysInstMap[mode]);
                 document.getElementById('vocab-result-text').innerHTML = parseMarkdown(feedback);
                 document.getElementById('vocab-loading').classList.add('hidden-mode');
                 document.getElementById('vocab-result').classList.remove('hidden-mode');
             } catch (error) {
                 showModal('錯誤', error.message);
-                document.getElementById('vocab-feedback-area').classList.add('hidden-mode');
+                hideVocabFeedback();
             }
         }
 
-        function randomizeGymSentence() { document.getElementById('gym-input').value = ''; document.getElementById('gym-feedback-area').classList.add('hidden-mode'); }
+        function randomizeGymSentence() {
+            document.getElementById('gym-input').value = '';
+            document.getElementById('gym-feedback-area').classList.add('hidden-mode');
+        }
 
         async function submitGym() {
             const original = document.getElementById('gym-original-text').innerText;
             const input = document.getElementById('gym-input').value.trim();
-            if (!input) { showModal('提示', '請輸入句子。'); return; }
+            if (!input) { showModal('提示', '請先輸入您的改寫句子。'); return; }
 
             document.getElementById('gym-feedback-area').classList.remove('hidden-mode');
             document.getElementById('gym-loading').classList.remove('hidden-mode');
-            document.getElementById('gym-result').classList.add('hidden-mode');
 
             try {
-                const feedback = await callGeminiAPI(`原句：${original}\n改寫：${input}`, "你是雅思考官，點評並給出示範句。使用繁體中文。");
-                
-                state.lastGymQ = original;
-                state.lastGymA = input;
-                state.lastGymFeedback = feedback;
-
+                const feedback = await callGeminiAPI(`原句：${original}\n改寫：${input}`, "你是雅思寫作考官，請針對改寫點評並給出評分建議。使用繁體中文。");
                 document.getElementById('gym-result-text').innerHTML = parseMarkdown(feedback);
                 document.getElementById('gym-loading').classList.add('hidden-mode');
                 document.getElementById('gym-result').classList.remove('hidden-mode');
-            } catch (e) {
-                showModal('錯誤', e.message);
+            } catch (error) {
+                showModal('錯誤', error.message);
                 document.getElementById('gym-feedback-area').classList.add('hidden-mode');
             }
         }
 
-        // ... 模考邏輯 (startExamTimer, pauseExamTimer, submitExam) 維持不變，省略以省版面 ...
-        function startExamTimer() {} function pauseExamTimer() {} function submitExam() {}
+        function startExamTimer() {
+            if (state.timerInterval) clearInterval(state.timerInterval);
+            state.isExamRunning = true;
+            state.timerInterval = setInterval(() => {
+                if (state.timeRemaining <= 0) {
+                    clearInterval(state.timerInterval);
+                    submitExam();
+                    return;
+                }
+                state.timeRemaining--;
+                const m = Math.floor(state.timeRemaining / 60);
+                const s = state.timeRemaining % 60;
+                document.getElementById('exam-timer').innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function pauseExamTimer() {
+            if (state.timerInterval) {
+                clearInterval(state.timerInterval);
+                state.isExamRunning = false;
+            }
+        }
+
+        document.getElementById('exam-input').addEventListener('input', function(e) {
+            const count = e.target.value.trim() === '' ? 0 : e.target.value.trim().split(/\s+/).length;
+            document.getElementById('exam-word-count').innerText = count;
+        });
+
+        async function submitExam() {
+            const essayText = document.getElementById('exam-input').value.trim();
+            if (essayText.length < 10) { showModal('提示', '請輸入更多文章內容再提交。'); return; }
+
+            pauseExamTimer();
+            document.getElementById('exam-overlay').classList.remove('hidden');
+
+            try {
+                const feedback = await callGeminiAPI(`學生文章：\n${essayText}`, "你是雅思前考官，請給出詳細診斷報告。使用繁體中文。");
+                document.getElementById('exam-overlay').classList.add('hidden');
+                document.getElementById('result-content').innerHTML = parseMarkdown(feedback);
+                switchView('result');
+            } catch (error) {
+                document.getElementById('exam-overlay').classList.add('hidden');
+                showModal('批改失敗', error.message);
+            }
+        }
 
         switchView('home');
     </script>
