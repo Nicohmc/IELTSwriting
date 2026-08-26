@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>IELTS 寫作訓練平台</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 引入 Firebase 相容版 SDK (支援傳統直接撰寫腳本的方式) -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
         body {
@@ -28,7 +34,6 @@
 </head>
 <body class="text-slate-800 h-screen flex flex-col overflow-hidden">
 
-    <!-- 頂部導航列 -->
     <header class="bg-white shadow-sm z-20 relative shrink-0">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-14 md:h-16 items-center">
@@ -36,12 +41,24 @@
                     <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
                     <span class="font-bold text-lg md:text-xl tracking-wider text-slate-800">IELTS Pro</span>
                 </div>
-                <nav class="hidden md:flex space-x-8">
-                    <button onclick="switchView('home')" class="nav-btn text-slate-500 hover:text-blue-600 font-medium px-3 py-2 rounded-md transition-colors" data-target="home">儀表板</button>
-                    <button onclick="switchView('training')" class="nav-btn text-slate-500 hover:text-blue-600 font-medium px-3 py-2 rounded-md transition-colors" data-target="training">基礎訓練營</button>
-                    <button onclick="switchView('exam')" class="nav-btn text-slate-500 hover:text-blue-600 font-medium px-3 py-2 rounded-md transition-colors" data-target="exam">實戰模擬考</button>
+                <nav class="hidden md:flex space-x-6 items-center">
+                    <button onclick="switchView('home')" class="nav-btn text-slate-500 hover:text-blue-600 font-medium px-2 py-2 rounded-md transition-colors" data-target="home">儀表板</button>
+                    <button onclick="switchView('training')" class="nav-btn text-slate-500 hover:text-blue-600 font-medium px-2 py-2 rounded-md transition-colors" data-target="training">基礎訓練營</button>
+                    <button onclick="switchView('exam')" class="nav-btn text-slate-500 hover:text-blue-600 font-medium px-2 py-2 rounded-md transition-colors" data-target="exam">實戰模擬考</button>
+                    <button onclick="switchView('bank')" class="nav-btn text-slate-500 hover:text-blue-600 font-medium px-2 py-2 rounded-md transition-colors" data-target="bank">錯題本</button>
+                    
+                    <!-- 登入與用戶狀態區塊 -->
+                    <div id="auth-section-desktop" class="ml-4 border-l pl-4 border-slate-200">
+                        <button id="btn-login-desktop" onclick="signInWithGoogle()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-1.5 rounded-full text-sm transition-colors shadow-sm">
+                            Google 登入
+                        </button>
+                        <div id="user-profile-desktop" class="hidden-mode flex items-center space-x-2">
+                            <img id="user-avatar-desktop" src="" alt="avatar" class="w-8 h-8 rounded-full border border-slate-200">
+                            <button onclick="signOutGoogle()" class="text-xs text-slate-500 hover:text-red-500 font-medium">登出</button>
+                        </div>
+                    </div>
                 </nav>
-                <div class="md:hidden">
+                <div class="md:hidden flex items-center">
                     <button onclick="toggleMobileMenu()" class="p-2 text-slate-600 hover:text-blue-600 focus:outline-none">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                     </button>
@@ -51,22 +68,34 @@
 
         <!-- 手機版下拉選單 -->
         <div id="mobile-menu" class="hidden md:hidden bg-white border-b border-slate-200 absolute w-full shadow-lg z-30 left-0 top-14">
-            <div class="px-4 py-2 space-y-1">
+            <div class="px-4 py-3 space-y-1">
+                <div id="auth-section-mobile" class="pb-3 mb-2 border-b border-slate-100 flex items-center justify-between">
+                    <button id="btn-login-mobile" onclick="signInWithGoogle()" class="w-full bg-blue-600 text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors shadow-sm text-center">
+                        使用 Google 登入
+                    </button>
+                    <div id="user-profile-mobile" class="hidden-mode flex items-center justify-between w-full">
+                        <div class="flex items-center space-x-2">
+                            <img id="user-avatar-mobile" src="" alt="avatar" class="w-8 h-8 rounded-full">
+                            <span id="user-name-mobile" class="text-sm font-bold text-slate-700"></span>
+                        </div>
+                        <button onclick="signOutGoogle()" class="text-xs bg-slate-100 text-slate-600 px-3 py-1.5 rounded-md hover:bg-slate-200 font-medium">登出</button>
+                    </div>
+                </div>
                 <button onclick="switchView('home'); toggleMobileMenu()" class="mobile-nav-btn block w-full text-left px-4 py-3 rounded-lg text-base font-medium text-slate-700 active:bg-blue-50" data-target="home">儀表板</button>
                 <button onclick="switchView('training'); toggleMobileMenu()" class="mobile-nav-btn block w-full text-left px-4 py-3 rounded-lg text-base font-medium text-slate-700 active:bg-blue-50" data-target="training">基礎訓練營</button>
                 <button onclick="switchView('exam'); toggleMobileMenu()" class="mobile-nav-btn block w-full text-left px-4 py-3 rounded-lg text-base font-medium text-slate-700 active:bg-blue-50" data-target="exam">實戰模擬考</button>
+                <button onclick="switchView('bank'); toggleMobileMenu()" class="mobile-nav-btn block w-full text-left px-4 py-3 rounded-lg text-base font-medium text-slate-700 active:bg-blue-50" data-target="bank">我的錯題本</button>
             </div>
         </div>
     </header>
 
-    <!-- 主要內容區 -->
-    <main class="flex-grow overflow-y-auto relative">
+    <main class="flex-grow overflow-y-auto relative bg-slate-50">
         
         <!-- 視圖 1: 首頁/儀表板 -->
         <div id="view-home" class="view-section max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 animate-fade-in">
             <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 md:p-8 text-white shadow-lg mb-6 md:mb-8">
-                <h1 class="text-2xl md:text-3xl font-bold mb-2">歡迎回來，準備好練習了嗎？</h1>
-                <p class="text-blue-100 text-sm md:text-base mb-6">已擴充至數百題專屬題庫，穩紮穩打突破雅思寫作。</p>
+                <h1 class="text-2xl md:text-3xl font-bold mb-2">歡迎來到 IELTS 寫作特訓中心！</h1>
+                <p class="text-blue-100 text-sm md:text-base mb-6">綁定雲端錯題本功能已上線，現在就開始累積你的專屬題庫。</p>
                 <div class="flex flex-col sm:flex-row gap-3">
                     <button onclick="switchView('training')" class="w-full sm:w-auto bg-white text-blue-600 hover:bg-blue-50 font-bold py-3 px-6 rounded-xl shadow transition-colors text-center">
                         進入基礎訓練營
@@ -78,16 +107,15 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 md:p-6">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 md:p-6 cursor-pointer hover:shadow-md transition-shadow" onclick="switchView('bank')">
                     <div class="flex items-center justify-between mb-3">
-                        <h3 class="font-bold text-base md:text-lg text-slate-800">每日訓練卡片</h3>
-                        <span class="bg-orange-100 text-orange-600 text-xs font-bold px-2 py-1 rounded-full">進行中</span>
+                        <h3 class="font-bold text-base md:text-lg text-slate-800 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                            我的專屬錯題本
+                        </h3>
+                        <span id="bank-count-badge" class="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded-full">0 題</span>
                     </div>
-                    <p class="text-slate-500 text-xs md:text-sm mb-4">累積高頻詞彙與同義替換能力。</p>
-                    <div class="w-full bg-slate-100 rounded-full h-2 mb-2">
-                        <div class="bg-blue-500 h-2 rounded-full" style="width: 10%"></div>
-                    </div>
-                    <p class="text-right text-xs text-slate-400">尚未完成挑戰</p>
+                    <p class="text-slate-500 text-xs md:text-sm">點擊查看你在練習中收藏的優質句型與 AI 解析。登入後可永久保存！</p>
                 </div>
                 
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 md:p-6 md:col-span-2">
@@ -99,25 +127,17 @@
             </div>
         </div>
 
-        <!-- 視圖 2: 基礎訓練營 -->
         <div id="view-training" class="view-section hidden max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
-            
             <div class="flex space-x-2 border-b border-slate-200 mb-4 md:mb-6">
-                <button onclick="setTrainingLevel(1)" id="tab-level-1" class="flex-1 sm:flex-initial px-3 py-2.5 text-sm md:text-base font-bold text-blue-600 border-b-2 border-blue-600 transition-colors text-center">
-                    Level 1: 詞彙暖身
-                </button>
-                <button onclick="setTrainingLevel(2)" id="tab-level-2" class="flex-1 sm:flex-initial px-3 py-2.5 text-sm md:text-base font-medium text-slate-500 hover:text-blue-600 transition-colors text-center">
-                    Level 2: 句型改寫
-                </button>
+                <button onclick="setTrainingLevel(1)" id="tab-level-1" class="flex-1 sm:flex-initial px-3 py-2.5 text-sm md:text-base font-bold text-blue-600 border-b-2 border-blue-600 transition-colors text-center">Level 1: 詞彙暖身</button>
+                <button onclick="setTrainingLevel(2)" id="tab-level-2" class="flex-1 sm:flex-initial px-3 py-2.5 text-sm md:text-base font-medium text-slate-500 hover:text-blue-600 transition-colors text-center">Level 2: 句型改寫</button>
             </div>
 
-            <!-- Level 1: 詞彙暖身區 -->
+            <!-- Level 1: 詞彙暖身 -->
             <div id="training-level-1">
                 <div class="mb-4 md:mb-6">
                     <h2 class="text-xl md:text-2xl font-bold text-slate-800 mb-1">詞彙暖身 (Vocabulary Builder)</h2>
-                    <p class="text-slate-500 text-xs md:text-sm mb-3">選取訓練模式進行練習（已載入擴充題庫）：</p>
-                    
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
                         <button onclick="setVocabMode('synonym')" id="btn-mode-synonym" class="vocab-mode-btn bg-blue-50 border-2 border-blue-500 text-blue-700 font-bold py-2 px-2 rounded-lg text-xs md:text-sm text-center">同義詞替換 (300題)</button>
                         <button onclick="setVocabMode('collocation')" id="btn-mode-collocation" class="vocab-mode-btn bg-white border border-slate-200 text-slate-600 font-medium py-2 px-2 rounded-lg text-xs md:text-sm text-center">高頻搭配詞 (100題)</button>
                         <button onclick="setVocabMode('wordFamily')" id="btn-mode-wordFamily" class="vocab-mode-btn bg-white border border-slate-200 text-slate-600 font-medium py-2 px-2 rounded-lg text-xs md:text-sm text-center">詞性轉換</button>
@@ -137,7 +157,6 @@
                     <div class="p-4 md:p-6">
                         <input type="text" id="vocab-input-single" class="w-full p-3 md:p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-base" placeholder="請輸入答案..." autocomplete="off">
                         <textarea id="vocab-input-multi" class="hidden-mode w-full h-28 p-3 md:p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none text-base" placeholder="請在此輸入您的句子..." spellcheck="false"></textarea>
-                        
                         <div class="mt-4 flex justify-end">
                             <button id="vocab-submit-btn" onclick="submitVocab()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl transition-colors flex justify-center items-center">
                                 送出並讓 AI 批改
@@ -145,23 +164,31 @@
                         </div>
                     </div>
 
-                    <div id="vocab-feedback-area" class="hidden-mode border-t border-slate-200 bg-blue-50 p-4 md:p-6">
+                    <!-- 批改結果與收藏按鈕 -->
+                    <div id="vocab-feedback-area" class="hidden-mode border-t border-slate-200 bg-blue-50 p-4 md:p-6 relative">
                         <div id="vocab-loading" class="hidden-mode flex flex-col items-center justify-center py-4">
                             <div class="spinner mb-3"></div>
                             <p class="text-slate-500 text-xs md:text-sm">AI 正在仔細分析您的答案...</p>
                         </div>
                         <div id="vocab-result" class="hidden-mode">
-                            <h4 class="font-bold text-blue-800 mb-2 flex items-center text-sm md:text-base">
-                                <svg class="w-5 h-5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                AI 解析與建議
-                            </h4>
-                            <div id="vocab-result-text" class="prose prose-blue max-w-none text-slate-700 text-xs md:text-sm leading-relaxed"></div>
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-bold text-blue-800 flex items-center text-sm md:text-base">
+                                    <svg class="w-5 h-5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    AI 解析與建議
+                                </h4>
+                                <!-- 收藏按鈕 -->
+                                <button onclick="saveCurrentToBank('vocab')" class="text-yellow-600 bg-yellow-100 hover:bg-yellow-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center transition-colors">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                                    收藏此題
+                                </button>
+                            </div>
+                            <div id="vocab-result-text" class="prose prose-blue max-w-none text-slate-700 text-xs md:text-sm leading-relaxed mt-2"></div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Level 2: 句型改寫區 -->
+            <!-- Level 2: 句型改寫 -->
             <div id="training-level-2" class="hidden-mode">
                 <div class="mb-4 md:mb-6">
                     <h2 class="text-xl md:text-2xl font-bold text-slate-800 mb-1">句型改寫 (Paraphrasing)</h2>
@@ -185,13 +212,20 @@
                         </div>
                     </div>
 
+                    <!-- 批改結果與收藏按鈕 -->
                     <div id="gym-feedback-area" class="hidden-mode border-t border-slate-200 bg-blue-50 p-4 md:p-6">
                         <div id="gym-loading" class="hidden-mode flex flex-col items-center justify-center py-4">
                             <div class="spinner mb-3"></div>
                             <p class="text-slate-500 text-xs md:text-sm">AI 分析中...</p>
                         </div>
                         <div id="gym-result" class="hidden-mode">
-                            <h4 class="font-bold text-blue-800 mb-2 text-sm md:text-base">AI 評語</h4>
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-bold text-blue-800 text-sm md:text-base">AI 評語</h4>
+                                <button onclick="saveCurrentToBank('gym')" class="text-yellow-600 bg-yellow-100 hover:bg-yellow-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center transition-colors">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                                    收藏此題
+                                </button>
+                            </div>
                             <div id="gym-result-text" class="prose prose-blue max-w-none text-slate-700 text-xs md:text-sm"></div>
                         </div>
                     </div>
@@ -199,7 +233,36 @@
             </div>
         </div>
 
-        <!-- 視圖 3: 實戰模擬考 -->
+        <div id="view-bank" class="view-section hidden max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl md:text-3xl font-bold text-slate-800 flex items-center">
+                    <svg class="w-8 h-8 mr-3 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                    我的專屬錯題本
+                </h2>
+            </div>
+            
+            <div id="bank-guest-message" class="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center hidden-mode">
+                <svg class="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                <h3 class="text-xl font-bold text-slate-700 mb-2">請先登入解鎖雲端錯題本</h3>
+                <p class="text-slate-500 mb-6">登入 Google 帳號後，您收藏的所有精華句型與 AI 解析將永久保存於雲端，並可跨裝置隨時複習。</p>
+                <button onclick="signInWithGoogle()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg transition-colors">立即登入</button>
+            </div>
+
+            <div id="bank-content-area" class="hidden-mode">
+                <div id="bank-loading" class="flex flex-col items-center justify-center py-12">
+                    <div class="spinner mb-4"></div>
+                    <p class="text-slate-500">正在從雲端載入您的筆記...</p>
+                </div>
+                <!-- 筆記卡片會動態生成於此 -->
+                <div id="bank-cards-container" class="grid grid-cols-1 gap-6"></div>
+                
+                <div id="bank-empty-message" class="hidden-mode bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
+                    <p class="text-slate-500 text-lg">您的錯題本目前是空的。<br>趕快到「基礎訓練營」練習並點擊收藏吧！</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 視圖 4: 實戰模擬考 -->
         <div id="view-exam" class="view-section hidden h-full flex flex-col">
             <div class="bg-slate-800 text-slate-200 px-4 md:px-6 py-2.5 flex justify-between items-center shadow-inner shrink-0">
                 <span class="font-bold text-white tracking-wider text-xs md:text-base truncate">Task 2 Mock</span>
@@ -225,40 +288,30 @@
                 <div id="exam-prompt-box" class="w-full md:w-[45%] bg-white rounded shadow-sm flex flex-col overflow-y-auto p-4 md:p-6">
                     <span class="inline-block border-b-2 border-slate-800 pb-1 font-bold text-sm md:text-base mb-3 uppercase tracking-widest">Writing Task 2</span>
                     <p class="text-slate-500 mb-3 text-xs md:text-sm">Spend about 40 minutes on this task.</p>
-                    
                     <div class="bg-slate-50 border-l-4 border-slate-800 p-4 mb-4">
                         <p id="exam-prompt" class="text-sm md:text-base text-slate-800 font-medium leading-relaxed">
-                            Some people think that universities should provide graduates with the knowledge and skills needed in the workplace. Others think that the true function of a university should be to give access to knowledge for its own sake, regardless of whether the course is useful to an employer.
-                            <br><br>
-                            Discuss both these views and give your own opinion.
+                            Some people think that universities should provide graduates with the knowledge and skills needed in the workplace. Others think that the true function of a university should be to give access to knowledge for its own sake, regardless of whether the course is useful to an employer.<br><br>Discuss both these views and give your own opinion.
                         </p>
                     </div>
                     <p class="text-slate-500 text-xs md:text-sm">Write at least 250 words.</p>
                 </div>
 
                 <div id="exam-input-box" class="hidden-mode md:flex w-full md:w-[55%] bg-white rounded shadow-sm flex-col relative flex-grow">
-                    <textarea id="exam-input" 
-                              class="exam-textarea w-full flex-grow p-4 md:p-6 text-base md:text-lg text-slate-800 leading-relaxed outline-none resize-none" 
-                              placeholder="Start writing here..." 
-                              spellcheck="false" 
-                              autocomplete="off"></textarea>
+                    <textarea id="exam-input" class="exam-textarea w-full flex-grow p-4 md:p-6 text-base md:text-lg text-slate-800 leading-relaxed outline-none resize-none" placeholder="Start writing here..." spellcheck="false" autocomplete="off"></textarea>
                     
                     <div id="exam-overlay" class="hidden absolute inset-0 bg-white/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-4">
                         <div class="spinner border-blue-600 mb-4"></div>
                         <h3 class="text-lg md:text-xl font-bold text-slate-800 mb-1">AI 考官批改中...</h3>
-                        <p class="text-slate-500 text-xs md:text-sm text-center">正在分析寫作分數，請稍候...</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 視圖 4: 模考成績單 -->
+        <!-- 視圖 5: 模考成績單 -->
         <div id="view-result" class="view-section hidden max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-xl md:text-2xl font-bold text-slate-800">評分診斷報告</h2>
-                <button onclick="switchView('exam')" class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center">
-                    ← 返回考場
-                </button>
+                <button onclick="switchView('exam')" class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center">← 返回考場</button>
             </div>
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 md:p-8">
                 <div id="result-content" class="prose prose-blue max-w-none text-slate-700 text-sm md:text-base"></div>
@@ -267,37 +320,225 @@
 
     </main>
 
+    <!-- 彈出對話框 -->
     <div id="custom-modal" class="hidden fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 animate-fade-in">
             <h3 id="modal-title" class="text-lg font-bold text-slate-800 mb-2">提示</h3>
             <p id="modal-message" class="text-slate-600 text-sm mb-6">訊息內容</p>
             <div class="flex justify-end">
-                <button onclick="closeModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-5 rounded-lg text-sm">
-                    確定
-                </button>
+                <button onclick="closeModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-5 rounded-lg text-sm">確定</button>
             </div>
         </div>
     </div>
 
     <script>
-        const apiKey = ""; 
+        // ==========================================
+        // 1. API 與 Firebase 雲端資料庫設定
+        // ==========================================
+        
+        // 【請在此處填入您的 Gemini API Key】
+        const GEMINI_API_KEY = ""; 
 
+        // 您專屬的 Firebase 設定檔
+        const firebaseConfig = {
+            apiKey: "AIzaSyDZCkTkGorHryGTz2N9ZgiDfTonVHUz_4A",
+            authDomain: "ielts-practice-c7117.firebaseapp.com",
+            databaseURL: "https://ielts-practice-c7117-default-rtdb.firebaseio.com",
+            projectId: "ielts-practice-c7117",
+            storageBucket: "ielts-practice-c7117.firebasestorage.app",
+            messagingSenderId: "977969080615",
+            appId: "1:977969080615:web:6c4137f29aefd6993d6102",
+            measurementId: "G-BGBXZ3TZBM"
+        };
+
+        // 初始化 Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+        // 應用程式全域狀態
         const state = {
             currentView: 'home',
             timerInterval: null,
             timeRemaining: 40 * 60,
             isExamRunning: false,
-            currentVocabMode: 'synonym'
+            currentVocabMode: 'synonym',
+            currentUser: null,           // 儲存當前登入者資訊
+            
+            // 暫存當前練習題目資訊 (為了收藏用)
+            tempData: {
+                vocab: { prompt: "", input: "", feedback: "" },
+                gym: { prompt: "", input: "", feedback: "" }
+            }
         };
 
-        // -------------------------------------------------------------
-        // 動態生成龐大題庫系統
-        // -------------------------------------------------------------
+        // ==========================================
+        // 2. Firebase 驗證 (Authentication) 邏輯
+        // ==========================================
+
+        function signInWithGoogle() {
+            auth.signInWithPopup(googleProvider)
+                .catch((error) => { showModal('登入失敗', error.message); });
+        }
+
+        function signOutGoogle() {
+            auth.signOut().then(() => {
+                showModal('提示', '您已成功登出。');
+                switchView('home');
+            });
+        }
+
+        // 監聽登入狀態改變
+        auth.onAuthStateChanged((user) => {
+            state.currentUser = user;
+            const deskLoginBtn = document.getElementById('btn-login-desktop');
+            const deskProfile = document.getElementById('user-profile-desktop');
+            const deskAvatar = document.getElementById('user-avatar-desktop');
+            
+            const mobLoginBtn = document.getElementById('btn-login-mobile');
+            const mobProfile = document.getElementById('user-profile-mobile');
+            const mobAvatar = document.getElementById('user-avatar-mobile');
+            const mobName = document.getElementById('user-name-mobile');
+
+            if (user) {
+                // 已登入：更新 UI
+                deskLoginBtn.classList.add('hidden-mode');
+                deskProfile.classList.remove('hidden-mode');
+                deskAvatar.src = user.photoURL || 'https://via.placeholder.com/150';
+                
+                mobLoginBtn.classList.add('hidden-mode');
+                mobProfile.classList.remove('hidden-mode');
+                mobAvatar.src = user.photoURL || 'https://via.placeholder.com/150';
+                mobName.innerText = user.displayName || '使用者';
+
+                // 如果停留在錯題本畫面，重新載入資料
+                if (state.currentView === 'bank') loadBankData();
+            } else {
+                // 未登入：恢復原狀
+                deskLoginBtn.classList.remove('hidden-mode');
+                deskProfile.classList.add('hidden-mode');
+                
+                mobLoginBtn.classList.remove('hidden-mode');
+                mobProfile.classList.add('hidden-mode');
+                
+                if (state.currentView === 'bank') updateBankViewUI();
+            }
+        });
+
+        // ==========================================
+        // 3. Firestore 錯題本儲存與讀取邏輯
+        // ==========================================
+
+        async function saveCurrentToBank(type) {
+            if (!state.currentUser) {
+                showModal('提示', '收藏功能為會員專屬。請先點擊右上角「Google 登入」再試一次！');
+                return;
+            }
+
+            const dataToSave = state.tempData[type];
+            if (!dataToSave.prompt) return;
+
+            try {
+                // 將資料寫入個人的 Firestore 路徑: users/{uid}/saved_items
+                await db.collection('users').doc(state.currentUser.uid).collection('saved_items').add({
+                    type: type, // 'vocab' 或 'gym'
+                    prompt: dataToSave.prompt,
+                    userInput: dataToSave.input,
+                    aiFeedback: dataToSave.feedback,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showModal('成功', '此題已成功收藏至您的雲端錯題本！');
+            } catch (error) {
+                console.error("Error saving document: ", error);
+                showModal('儲存失敗', error.message);
+            }
+        }
+
+        async function loadBankData() {
+            updateBankViewUI();
+            if (!state.currentUser) return;
+
+            const container = document.getElementById('bank-cards-container');
+            const emptyMsg = document.getElementById('bank-empty-message');
+            const loading = document.getElementById('bank-loading');
+            
+            container.innerHTML = '';
+            emptyMsg.classList.add('hidden-mode');
+            loading.classList.remove('hidden-mode');
+
+            try {
+                const querySnapshot = await db.collection('users').doc(state.currentUser.uid)
+                                              .collection('saved_items')
+                                              .orderBy('timestamp', 'desc').get();
+                
+                loading.classList.add('hidden-mode');
+                
+                // 更新數字 Badge
+                document.getElementById('bank-count-badge').innerText = `${querySnapshot.size} 題`;
+
+                if (querySnapshot.empty) {
+                    emptyMsg.classList.remove('hidden-mode');
+                    return;
+                }
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const card = document.createElement('div');
+                    card.className = "bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden";
+                    
+                    const tagColor = data.type === 'vocab' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700';
+                    const tagText = data.type === 'vocab' ? '詞彙暖身' : '句型改寫';
+
+                    card.innerHTML = `
+                        <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-start">
+                            <div>
+                                <span class="${tagColor} text-xs font-bold px-2 py-1 rounded-full mb-2 inline-block">${tagText}</span>
+                                <p class="text-sm md:text-base font-medium text-slate-800">${data.prompt}</p>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-red-50/30 border-b border-slate-100">
+                            <span class="text-xs font-bold text-slate-400 uppercase">您的作答</span>
+                            <p class="text-sm text-slate-700 mt-1">${data.userInput}</p>
+                        </div>
+                        <div class="p-4">
+                            <span class="text-xs font-bold text-blue-400 uppercase mb-2 block">AI 解析</span>
+                            <div class="prose prose-sm max-w-none text-slate-700 text-sm">
+                                ${parseMarkdown(data.aiFeedback)}
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (error) {
+                loading.classList.add('hidden-mode');
+                showModal('讀取失敗', '無法載入錯題本，請確認您的 Firebase 設定是否正確，以及資料庫安全規則是否為測試模式。');
+                console.error(error);
+            }
+        }
+
+        function updateBankViewUI() {
+            const guestMsg = document.getElementById('bank-guest-message');
+            const contentArea = document.getElementById('bank-content-area');
+            
+            if (state.currentUser) {
+                guestMsg.classList.add('hidden-mode');
+                contentArea.classList.remove('hidden-mode');
+            } else {
+                guestMsg.classList.remove('hidden-mode');
+                contentArea.classList.add('hidden-mode');
+                document.getElementById('bank-count-badge').innerText = '0 題';
+            }
+        }
+
+        // ==========================================
+        // 4. 動態龐大題庫生成器 (300題+)
+        // ==========================================
         const generateQuestions = () => {
             const wrap = (word) => `<span class='text-blue-600 font-bold'>[ ${word} ]</span>`;
             const q = { synonym: [], collocation: [], wordFamily: [], keyword: [] };
 
-            // 1. Synonym (30個單字)
+            // 擴充至 30 個基礎單字，每個 10 句情境 = 300題
             const synData = [
                 { w: "bad", s: ["Air pollution is a very _ problem.", "Junk food has a _ impact on health.", "A lack of sleep can lead to _ academic performance.", "The economic crisis had _ consequences.", "Overpopulation is a _ issue in cities.", "Excessive screen time has _ effects on eyesight.", "Deforestation is _ to the global climate.", "Violent video games are _ for teenagers.", "Using plastic bags is _ for the ecosystem.", "A sedentary lifestyle is _ for long-term health."] },
                 { w: "good", s: ["Studying abroad is a _ opportunity for students.", "A balanced diet has a _ effect on well-being.", "Renewable energy provides a _ alternative to fossil fuels.", "Learning a second language brings _ results.", "Public transport is a _ choice for reducing emissions.", "Exercise is _ for mental health.", "Reading offers a _ way to acquire knowledge.", "Teamwork is a _ strategy in the workplace.", "Having a hobby is _ for stress relief.", "The government policy had a _ impact on the economy."] },
@@ -309,6 +550,7 @@
                 { w: "change", s: ["Technology will _ the way we live.", "The government needs to _ its policy on immigration.", "We must _ our habits to protect the environment.", "The internet has _ the global economy.", "Education can _ a person's future.", "City life has _ significantly over the past decade.", "Climate patterns are beginning to _ rapidly.", "Social media has _ human interaction.", "The new manager wants to _ the company structure.", "Travel can _ a person's perspective on life."] },
                 { w: "many", s: ["There are _ reasons for this phenomenon.", "People face _ difficulties when moving abroad.", "_ students struggle with mathematics.", "The internet provides _ opportunities for learning.", "Cities suffer from _ environmental problems.", "_ animals are losing their habitats.", "There are _ advantages to learning online.", "The project requires _ resources.", "_ experts believe that AI will replace jobs.", "_ countries are investing in renewable energy."] },
                 { w: "problem", s: ["Traffic congestion is a serious _ in big cities.", "Unemployment is a major _ for the government.", "Global warming is a global _.", "Obesity has become a common _ among children.", "The housing shortage is a difficult _ to solve.", "Stress is a widespread _ in modern society.", "Poverty remains a persistent _ in rural areas.", "Cyberbullying is a growing _ on the internet.", "Water scarcity is an urgent _.", "Lack of funding is the main _ for the research."] },
+                // 新增的 20 個單字擴充
                 { w: "happy", s: ["The team was very _ with the results.", "Winning the competition made her _.", "They had a _ childhood.", "The customers are _ with the new service.", "He felt _ after finishing the difficult task.", "A _ employee is a productive employee.", "The news made everyone _.", "They live a _ life in the countryside.", "I am _ to announce the new project.", "We are _ to help you with your inquiry."] },
                 { w: "sad", s: ["It is a _ story about a lost dog.", "The movie had a very _ ending.", "He felt _ when his friend moved away.", "The _ news shocked the entire community.", "She had a _ expression on her face.", "It is _ to see so much poverty.", "The team experienced a _ defeat.", "A _ event changed his life forever.", "They were _ about the cancellation of the concert.", "It is a _ reality that many children lack education."] },
                 { w: "hard", s: ["The exam was very _ for most students.", "It is _ to find a good job in this economy.", "She worked _ to achieve her goals.", "Learning a new language can be a _ task.", "They faced many _ challenges.", "It is _ to believe that he is right.", "He made a _ decision.", "The problem is _ to solve.", "It is a _ time for the company.", "The negotiations were _ and stressful."] },
@@ -340,7 +582,7 @@
                 });
             });
 
-            // 2. Collocation (高頻搭配詞) - 10大關鍵字，各10句 = 100題
+            // 搭配詞 100 題
             const colData = [
                 { w: "action", s: ["The government needs to _ action immediately.", "We must _ action to stop climate change.", "The school will _ strict action against bullying.", "It is time to _ action on plastic waste.", "Authorities should _ quick action to resolve the crisis.", "Citizens can _ collective action to demand change.", "Failure to _ action will lead to disaster.", "The council decided to _ action on traffic noise.", "We urge the committee to _ prompt action.", "If we do not _ action now, it will be too late."] },
                 { w: "role", s: ["Education _ a crucial role in society.", "Technology _ a major role in our daily lives.", "Parents _ an essential role in raising children.", "The media _ a significant role in shaping public opinion.", "Diet _ a vital role in maintaining health.", "Renewable energy will _ a key role in the future.", "Small businesses _ an important role in the economy.", "Exercise _ a beneficial role in stress management.", "The UN _ a central role in peacekeeping.", "Teachers _ a fundamental role in character building."] },
@@ -363,7 +605,7 @@
                 });
             });
 
-            // 3. Word Family (20題)
+            // 詞性轉換 20題
             const wfData = [
                 { w: "Rely (動詞) -> 請填寫名詞形式", s: "Over-[ ______ ] on technology is dangerous." },
                 { w: "Benefit (名詞/動詞) -> 請填寫形容詞形式", s: "Reading books is highly [ ______ ] for children." },
@@ -388,7 +630,7 @@
             ];
             wfData.forEach(item => q.wordFamily.push({ instruction: item.w, prompt: item.s.replace("[ ______ ]", wrap("______")) }));
 
-            // 4. Keyword (造句) (20題)
+            // 造句 20題
             const kwData = [
                 ["Beneficial", "Society"], ["Technology", "Communication"], ["Government", "Fund"],
                 ["Education", "Develop"], ["Environment", "Protect"], ["Economy", "Growth"],
@@ -404,12 +646,19 @@
 
             return q;
         };
-
         const vocabQuestions = generateQuestions();
 
-        // -------------------------------------------------------------
-        // 共用工具與 API
-        // -------------------------------------------------------------
+        const gymSentences = [
+            "Many people think that studying abroad is a good idea for university students.",
+            "The government should spend more money on public transportation.",
+            "Technology has changed the way we communicate with each other.",
+            "Fast food is causing health problems for children around the world."
+        ];
+
+        // ==========================================
+        // 5. 核心邏輯與 API 呼叫 (修正版)
+        // ==========================================
+        
         function parseMarkdown(text) {
             return text
                 .replace(/^### (.*$)/gim, '<h3 class="text-lg font-bold mt-4 mb-2 text-slate-800">$1</h3>')
@@ -419,8 +668,10 @@
         }
 
         async function callGeminiAPI(prompt, systemInstruction) {
-            // Updated model endpoint to a stable version
-            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+            // 使用穩定的 gemini-2.5-flash 模型
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+            
+            // 修正：依據官方要求，systemInstruction 必須包含 role 屬性
             const payload = {
                 contents: [{ 
                     role: "user",
@@ -455,7 +706,7 @@
                     }
                 } catch (error) {
                     console.error("API Call Error Attempt " + attempt + ":", error);
-                    if (attempt === 4) throw new Error("無法連線至 AI 伺服器，或設定有誤：" + error.message);
+                    if (attempt === 4) throw new Error("無法連線至 AI 伺服器，或 API Key 設定有誤：" + error.message);
                     await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
                 }
             }
@@ -487,6 +738,7 @@
             } else { pauseExamTimer(); }
 
             if (viewId === 'training') setTrainingLevel(1);
+            if (viewId === 'bank') loadBankData();
         }
 
         function toggleExamMobileTab(tab) {
@@ -509,10 +761,13 @@
             }
         }
 
+        // ==========================================
+        // 6. 各區塊互動邏輯 (Training / Exam)
+        // ==========================================
+
         function setTrainingLevel(level) {
             const tab1 = document.getElementById('tab-level-1');
             const tab2 = document.getElementById('tab-level-2');
-            
             if (level === 1) {
                 tab1.className = "flex-1 sm:flex-initial px-3 py-2.5 text-sm md:text-base font-bold text-blue-600 border-b-2 border-blue-600 transition-colors text-center";
                 tab2.className = "flex-1 sm:flex-initial px-3 py-2.5 text-sm md:text-base font-medium text-slate-500 hover:text-blue-600 transition-colors text-center";
@@ -542,7 +797,6 @@
                 document.getElementById('vocab-input-single').classList.remove('hidden-mode');
                 document.getElementById('vocab-input-multi').classList.add('hidden-mode');
             }
-
             hideVocabFeedback();
             loadVocabQuestion();
         }
@@ -568,9 +822,7 @@
         async function submitVocab() {
             const mode = state.currentVocabMode;
             const rawPrompt = document.getElementById('vocab-prompt').innerText;
-            const input = mode === 'keyword' 
-                ? document.getElementById('vocab-input-multi').value.trim()
-                : document.getElementById('vocab-input-single').value.trim();
+            const input = mode === 'keyword' ? document.getElementById('vocab-input-multi').value.trim() : document.getElementById('vocab-input-single').value.trim();
 
             if (!input) { showModal('提示', '請先輸入您的答案。'); return; }
 
@@ -587,6 +839,10 @@
 
             try {
                 const feedback = await callGeminiAPI(`題目情境：\n${rawPrompt}\n\n學生作答：${input}`, sysInstMap[mode]);
+                
+                // 儲存暫存資料以供收藏
+                state.tempData.vocab = { prompt: rawPrompt, input: input, feedback: feedback };
+                
                 document.getElementById('vocab-result-text').innerHTML = parseMarkdown(feedback);
                 document.getElementById('vocab-loading').classList.add('hidden-mode');
                 document.getElementById('vocab-result').classList.remove('hidden-mode');
@@ -597,6 +853,10 @@
         }
 
         function randomizeGymSentence() {
+            const currentText = document.getElementById('gym-original-text').innerText;
+            let newText = currentText;
+            while (newText === currentText) { newText = gymSentences[Math.floor(Math.random() * gymSentences.length)]; }
+            document.getElementById('gym-original-text').innerText = newText;
             document.getElementById('gym-input').value = '';
             document.getElementById('gym-feedback-area').classList.add('hidden-mode');
         }
@@ -608,9 +868,14 @@
 
             document.getElementById('gym-feedback-area').classList.remove('hidden-mode');
             document.getElementById('gym-loading').classList.remove('hidden-mode');
+            document.getElementById('gym-result').classList.add('hidden-mode');
 
             try {
                 const feedback = await callGeminiAPI(`原句：${original}\n改寫：${input}`, "你是雅思寫作考官，請針對改寫點評並給出評分建議。使用繁體中文。");
+                
+                // 儲存暫存資料以供收藏
+                state.tempData.gym = { prompt: original, input: input, feedback: feedback };
+
                 document.getElementById('gym-result-text').innerHTML = parseMarkdown(feedback);
                 document.getElementById('gym-loading').classList.add('hidden-mode');
                 document.getElementById('gym-result').classList.remove('hidden-mode');
@@ -666,6 +931,7 @@
             }
         }
 
+        // 啟動應用程式
         switchView('home');
     </script>
 </body>
